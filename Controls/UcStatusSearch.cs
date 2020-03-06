@@ -54,6 +54,7 @@ namespace uspto.Controls
         {
             if (nums != null && nums.Length > 0)
             {
+                SaveData(nums);
                 lb_staus.Text = nums.Length.ToString();
                 pb_nums.Value = 0;
                 pb_nums.Maximum = nums.Length;
@@ -188,9 +189,9 @@ namespace uspto.Controls
                         var docdata = string.Empty;
                         item.DocDates.ToList().ForEach(m => docdata = docdata + m + "\r\n");
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = item.DocDates == null ? "" : docdata;// string.Join("\t",item.DocDates);
-                        
+
                     }
-                    
+
                     excelPackage.SaveAs(new FileInfo(saveDialog.FileName));
 
                 }
@@ -200,7 +201,21 @@ namespace uspto.Controls
             }
         }
 
+        private void SaveData(string[] datas, bool overwirte = false)
+        {
 
+            var filename = Directory.GetCurrentDirectory() + "/file.db";
+            if (overwirte)
+            {
+                File.Delete(filename);
+            }
+            if (!File.Exists(filename))
+            {
+                var file = File.Create(filename);
+                file.Close();
+            }
+            File.AppendAllLines(filename, datas, Encoding.UTF8);
+        }
 
 
         CancellationTokenSource CancellationTokenSourceDown = new CancellationTokenSource();
@@ -251,13 +266,24 @@ namespace uspto.Controls
                         {
                             pb_down.PerformStep();
                             lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
-                            tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf download ok\r\n");
+                            tbx_rst.AppendText($"{item.Name}-{item.Num}.PDF DOWNLOAD OK\r\n");
                         }));
                     }
 
                 }, CancellationTokenSourceDown.Token);
             }
 
+        }
+
+        private void btn_load_Click(object sender, EventArgs e)
+        {
+            var file = Directory.GetCurrentDirectory() + "/file.db";
+            if (File.Exists(file))
+            {
+                var lines = File.ReadAllLines(file, Encoding.UTF8).Distinct().Where(m => Regex.IsMatch(m, @"\d+")).ToArray();
+                tbx_nums.Lines = lines;
+                SaveData(lines, true);
+            }
         }
     }
 }

@@ -73,6 +73,7 @@
             this.btn_load.TabIndex = 3;
             this.btn_load.Text = "载入";
             this.btn_load.UseVisualStyleBackColor = true;
+            this.btn_load.Click += new System.EventHandler(this.btn_load_Click);
             // 
             // btn_clear
             // 
@@ -146,7 +147,7 @@
             this.pb_down.Location = new System.Drawing.Point(6, 174);
             this.pb_down.Name = "pb_down";
             this.pb_down.Size = new System.Drawing.Size(384, 12);
-            this.pb_down.Step = 0;
+            this.pb_down.Step = 1;
             this.pb_down.TabIndex = 3;
             // 
             // btn_down
