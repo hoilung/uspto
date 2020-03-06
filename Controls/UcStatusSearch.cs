@@ -13,6 +13,7 @@ using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using uspto.Models;
+using System.Threading;
 
 namespace uspto.Controls
 {
@@ -29,10 +30,21 @@ namespace uspto.Controls
             tbx_nums.Clear();
         }
 
+        CancellationTokenSource CancellationTokenSourceSearch;
         private void btn_search_Click(object sender, EventArgs e)
         {
-            var nums = tbx_nums.Lines.Distinct().Where(m => m.Length > 0 && Regex.IsMatch(m, @"\d+")).ToArray();
+            if (btn_search.Text == "取消" && CancellationTokenSourceSearch != null)
+            {
+                CancellationTokenSourceSearch.Cancel();
+                return;
+            }
+            CancellationTokenSourceSearch = new CancellationTokenSource();
+            CancellationTokenSourceSearch.Token.Register(() =>
+            {
+                btn_search.Text = "查询";
+            });
 
+            var nums = tbx_nums.Lines.Distinct().Where(m => m.Length > 0 && Regex.IsMatch(m, @"\d+")).ToArray();
             DoSearch(nums);
         }
 
@@ -40,12 +52,12 @@ namespace uspto.Controls
 
         private void DoSearch(string[] nums)
         {
-            if (nums != null)
+            if (nums != null && nums.Length > 0)
             {
                 lb_staus.Text = nums.Length.ToString();
-
                 pb_nums.Value = 0;
                 pb_nums.Maximum = nums.Length;
+                btn_search.Text = "取消";
 
                 var client = new RestClient();
                 client.BaseUrl = new Uri("http://tsdr.uspto.gov/");
@@ -56,9 +68,11 @@ namespace uspto.Controls
                 var list = new List<Models.Patent>();
                 Task.Run(async () =>
                 {
-
                     foreach (var item in nums)
                     {
+                        if (CancellationTokenSourceSearch.IsCancellationRequested)
+                            break;
+
                         var model = new Models.Patent();
                         model.Num = item;
 
@@ -109,8 +123,13 @@ namespace uspto.Controls
 
                     patents.Clear();
                     patents = list;
-                });
+                }, CancellationTokenSourceSearch.Token);
 
+            }
+            else
+            {
+                tbx_nums.Focus();
+                CancellationTokenSourceSearch.Cancel();
             }
         }
 
