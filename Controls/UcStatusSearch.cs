@@ -74,11 +74,11 @@ namespace uspto.Controls
                             break;
 
                         var model = new Models.Patent();
-                        model.Num = item;
+                        model.Num = item.Trim();
 
                         var request = new RestRequest();
                         request.AddHeader("Referer", "http://tsdr.uspto.gov/");
-                        request.Resource = $"statusview/sn{item}";
+                        request.Resource = $"statusview/sn{model.Num}";
                         var resp = client.Get(request);
                         var step = $"{item} {resp.StatusCode} \r\n";
 
@@ -137,7 +137,7 @@ namespace uspto.Controls
         {
             var saveDialog = new SaveFileDialog();
             saveDialog.Filter = "xls|*.xls";
-            saveDialog.FileName = DateTime.Now.ToString("yyyy-MM-dd-HHmmssfff");
+            saveDialog.FileName = DateTime.Now.ToString("yyyyMMdd-HHmmssfff");
             saveDialog.DefaultExt = ".xls";
             saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             if (saveDialog.ShowDialog() == DialogResult.OK)
@@ -156,7 +156,7 @@ namespace uspto.Controls
                             excelPackage.Workbook.Worksheets[1].Cells[1, 2].Value = "申请号";
                             excelPackage.Workbook.Worksheets[1].Cells[1, 3].Value = "状态时间";
                             excelPackage.Workbook.Worksheets[1].Cells[1, 4].Value = "申请状态";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";
+                            excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";                            
                         }
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name;
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num;
