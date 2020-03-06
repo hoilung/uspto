@@ -33,11 +33,14 @@
             this.btn_load = new System.Windows.Forms.Button();
             this.btn_clear = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.lb_staus = new System.Windows.Forms.Label();
             this.pb_nums = new System.Windows.Forms.ProgressBar();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.lb_down = new System.Windows.Forms.Label();
+            this.pb_down = new System.Windows.Forms.ProgressBar();
+            this.btn_down = new System.Windows.Forms.Button();
             this.btn_export = new System.Windows.Forms.Button();
             this.tbx_rst = new System.Windows.Forms.TextBox();
-            this.lb_staus = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -97,6 +100,15 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "查询";
             // 
+            // lb_staus
+            // 
+            this.lb_staus.AutoSize = true;
+            this.lb_staus.Location = new System.Drawing.Point(396, 122);
+            this.lb_staus.Name = "lb_staus";
+            this.lb_staus.Size = new System.Drawing.Size(41, 12);
+            this.lb_staus.TabIndex = 6;
+            this.lb_staus.Text = "待查询";
+            // 
             // pb_nums
             // 
             this.pb_nums.Location = new System.Drawing.Point(6, 122);
@@ -107,6 +119,9 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.lb_down);
+            this.groupBox2.Controls.Add(this.pb_down);
+            this.groupBox2.Controls.Add(this.btn_down);
             this.groupBox2.Controls.Add(this.btn_export);
             this.groupBox2.Controls.Add(this.tbx_rst);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
@@ -116,6 +131,33 @@
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "结果";
+            // 
+            // lb_down
+            // 
+            this.lb_down.AutoSize = true;
+            this.lb_down.Location = new System.Drawing.Point(396, 174);
+            this.lb_down.Name = "lb_down";
+            this.lb_down.Size = new System.Drawing.Size(41, 12);
+            this.lb_down.TabIndex = 4;
+            this.lb_down.Text = "待下载";
+            // 
+            // pb_down
+            // 
+            this.pb_down.Location = new System.Drawing.Point(6, 174);
+            this.pb_down.Name = "pb_down";
+            this.pb_down.Size = new System.Drawing.Size(384, 12);
+            this.pb_down.Step = 0;
+            this.pb_down.TabIndex = 3;
+            // 
+            // btn_down
+            // 
+            this.btn_down.Location = new System.Drawing.Point(396, 49);
+            this.btn_down.Name = "btn_down";
+            this.btn_down.Size = new System.Drawing.Size(75, 23);
+            this.btn_down.TabIndex = 2;
+            this.btn_down.Text = "下载PDF";
+            this.btn_down.UseVisualStyleBackColor = true;
+            this.btn_down.Click += new System.EventHandler(this.btn_down_Click);
             // 
             // btn_export
             // 
@@ -134,18 +176,9 @@
             this.tbx_rst.Name = "tbx_rst";
             this.tbx_rst.ReadOnly = true;
             this.tbx_rst.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.tbx_rst.Size = new System.Drawing.Size(384, 156);
+            this.tbx_rst.Size = new System.Drawing.Size(384, 148);
             this.tbx_rst.TabIndex = 0;
             this.tbx_rst.WordWrap = false;
-            // 
-            // lb_staus
-            // 
-            this.lb_staus.AutoSize = true;
-            this.lb_staus.Location = new System.Drawing.Point(396, 122);
-            this.lb_staus.Name = "lb_staus";
-            this.lb_staus.Size = new System.Drawing.Size(41, 12);
-            this.lb_staus.TabIndex = 6;
-            this.lb_staus.Text = "待查询";
             // 
             // UcStatusSearch
             // 
@@ -174,5 +207,8 @@
         private System.Windows.Forms.Button btn_export;
         private System.Windows.Forms.ProgressBar pb_nums;
         private System.Windows.Forms.Label lb_staus;
+        private System.Windows.Forms.Button btn_down;
+        private System.Windows.Forms.ProgressBar pb_down;
+        private System.Windows.Forms.Label lb_down;
     }
 }

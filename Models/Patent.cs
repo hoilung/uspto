@@ -19,5 +19,8 @@ namespace uspto.Models
         public string PublicationDate { get; set; } = string.Empty;
 
         public string PdfFile { get; set; } = string.Empty;
+
+        public string [] DocDates { get; set; }
+                
     }
 }

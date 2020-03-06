@@ -91,6 +91,7 @@ namespace uspto.Controls
 
                         if (resp.IsSuccessful)
                         {
+
                             htmldoc.LoadHtml(resp.Content);
                             var name = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Mark:')]/../div[2]");
                             var status = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status:')]/../div[2]");
@@ -113,7 +114,26 @@ namespace uspto.Controls
                             {
                                 model.PublicationDate = pubDate.InnerText.Trim();
                             }
-                            //request.Resource = $"documentviewer?caseId={item}&";
+
+                            await Task.Delay(new Random().Next(500, 2000));
+                            request.Resource = $"documentviewer?caseId=sn{model.Num}&";
+                            var resp2 = client.Get(request);
+                            if (resp2.IsSuccessful)
+                            {
+                                htmldoc.LoadHtml(resp2.Content);
+                                var nodejson = htmldoc.DocumentNode.SelectSingleNode("/html/head/script[contains(text(),'DocsList')]");
+                                if (nodejson != null)
+                                {
+                                    var json = nodejson.InnerText.Replace("var DocsList =", "");
+                                    var docslist = Newtonsoft.Json.JsonConvert.DeserializeObject<DocsList>(json);
+                                    model.DocDates = docslist.caseDocs.Take(5).Select(m => m.displayDate + " " + m.description).ToArray();
+                                    var cert = docslist.caseDocs.Where(m => m.description.Contains("Registration Certificate")).FirstOrDefault();
+                                    if (cert != null && cert.urlPathList.Length > 0)
+                                    {
+                                        model.PdfFile = cert.urlPathList[0];
+                                    }
+                                }
+                            }
 
                         }
                         list.Add(model);
@@ -156,14 +176,21 @@ namespace uspto.Controls
                             excelPackage.Workbook.Worksheets[1].Cells[1, 2].Value = "申请号";
                             excelPackage.Workbook.Worksheets[1].Cells[1, 3].Value = "状态时间";
                             excelPackage.Workbook.Worksheets[1].Cells[1, 4].Value = "申请状态";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";                            
+                            excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";
+                            excelPackage.Workbook.Worksheets[1].Cells[1, 6].Value = "文档时间";
+
                         }
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name;
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num;
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 3].Value = item.StatusDate;
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 4].Value = item.Status;
                         excelPackage.Workbook.Worksheets[1].Cells[i + 2, 5].Value = item.PublicationDate;
+                        var docdata = string.Empty;
+                        item.DocDates.ToList().ForEach(m => docdata = docdata + m + "\r\n");
+                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = item.DocDates == null ? "" : docdata;// string.Join("\t",item.DocDates);
+                        
                     }
+                    
                     excelPackage.SaveAs(new FileInfo(saveDialog.FileName));
 
                 }
@@ -174,20 +201,61 @@ namespace uspto.Controls
         }
 
 
-        private void DownloadFile(Patent[] patents)
+
+
+        CancellationTokenSource CancellationTokenSourceDown = new CancellationTokenSource();
+        private void btn_down_Click(object sender, EventArgs e)
+        {
+            if (btn_down.Text == "取消" && CancellationTokenSourceDown != null)
+            {
+                CancellationTokenSourceDown.Cancel();
+                return;
+            }
+            CancellationTokenSourceDown.Token.Register(() =>
+            {
+                btn_down.Text = "下载PDF";
+            });
+
+            var downlist = patents.Where(m => !string.IsNullOrEmpty(m.PdfFile) && m.PdfFile.StartsWith("http") && m.PdfFile.Contains(".pdf")).ToArray();
+
+            if (downlist == null || downlist.Length < 1)
+            {
+                MessageBox.Show("没有可供下载的文件");
+                return;
+            }
+            DownloadPdf(downlist);
+        }
+
+        private void DownloadPdf(Patent[] patents)
         {
             if (patents != null)
             {
-                var dir = $"{Directory.GetCurrentDirectory()}/download/{DateTime.Now.ToString("yyyyMMDD")}";
-                if (!Directory.Exists(dir))
+                pb_down.Maximum = patents.Length;
+                pb_down.Value = 0;
+                Task.Run(() =>
                 {
-                    Directory.CreateDirectory(dir);
-                }
-                var client = new WebClient();
-                foreach (var item in patents)
-                {
-                    client.DownloadFile(item.PdfFile, $"{dir}/{item.Name}.pdf");
-                }
+
+                    var dir = $"{Directory.GetCurrentDirectory()}/download/{DateTime.Now.ToString("yyyyMMdd")}";
+                    if (!Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                    }
+                    var client = new WebClient();
+                    foreach (var item in patents)
+                    {
+                        if (CancellationTokenSourceDown.IsCancellationRequested)
+                            break;
+                        client.DownloadFile(item.PdfFile, $"{dir}/{item.Name}-{item.Num}.pdf");
+
+                        tbx_rst.Invoke(new MethodInvoker(() =>
+                        {
+                            pb_down.PerformStep();
+                            lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
+                            tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf download ok\r\n");
+                        }));
+                    }
+
+                }, CancellationTokenSourceDown.Token);
             }
 
         }
