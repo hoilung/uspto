@@ -21,7 +21,7 @@ namespace uspto.Controls
     {
         public UcStatusSearch()
         {
-            InitializeComponent();
+            InitializeComponent();            
 
         }
 
@@ -144,6 +144,11 @@ namespace uspto.Controls
 
                     patents.Clear();
                     patents = list;
+                    btn_search.Invoke(new MethodInvoker(() =>
+                    {
+                        btn_search.Text = "查询";
+                        tbx_rst.AppendText("查询完成\r\n");
+                    }));
                 }, CancellationTokenSourceSearch.Token);
 
             }
@@ -247,6 +252,7 @@ namespace uspto.Controls
             {
                 pb_down.Maximum = patents.Length;
                 pb_down.Value = 0;
+                btn_down.Text = "取消";
                 Task.Run(() =>
                 {
 
@@ -266,10 +272,15 @@ namespace uspto.Controls
                         {
                             pb_down.PerformStep();
                             lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
-                            tbx_rst.AppendText($"{item.Name}-{item.Num}.PDF DOWNLOAD OK\r\n");
+                            tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf Download OK\r\n");
                         }));
                     }
 
+                    btn_down.Invoke(new MethodInvoker(() =>
+                    {
+                        btn_down.Text = "下载PDF";
+                        tbx_rst.AppendText("下载完成\r\n");
+                    }));
                 }, CancellationTokenSourceDown.Token);
             }
 
