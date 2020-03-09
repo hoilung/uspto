@@ -21,7 +21,7 @@ namespace uspto.Controls
     {
         public UcStatusSearch()
         {
-            InitializeComponent();            
+            InitializeComponent();
 
         }
 
@@ -143,7 +143,7 @@ namespace uspto.Controls
                     }
 
                     patents.Clear();
-                    patents = list;
+                    patents.AddRange(list);
                     btn_search.Invoke(new MethodInvoker(() =>
                     {
                         btn_search.Text = "查询";
@@ -161,48 +161,68 @@ namespace uspto.Controls
 
         private void btn_export_Click(object sender, EventArgs e)
         {
-            var saveDialog = new SaveFileDialog();
-            saveDialog.Filter = "xls|*.xls";
-            saveDialog.FileName = DateTime.Now.ToString("yyyyMMdd-HHmmssfff");
-            saveDialog.DefaultExt = ".xls";
-            saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            if (saveDialog.ShowDialog() == DialogResult.OK)
+            if (patents != null && patents.Count > 0)
             {
-                using (ExcelPackage excelPackage = new ExcelPackage())
+
+                var saveDialog = new SaveFileDialog();
+                saveDialog.Filter = "xls|*.xls";
+                saveDialog.FileName = DateTime.Now.ToString("yyyyMMdd-HHmmssfff");
+                saveDialog.DefaultExt = ".xls";
+                saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    excelPackage.Workbook.Worksheets.Add(DateTime.Now.ToString("yyyyMMdd"));
-
-
-                    for (int i = 0; i < patents.Count; i++)
+                    using (ExcelPackage excelPackage = new ExcelPackage())
                     {
-                        var item = patents[i];
-                        if (i == 0)
+                        excelPackage.Workbook.Worksheets.Add(DateTime.Now.ToString("yyyyMMdd"));
+
+
+                        for (int i = 0; i < patents.Count; i++)
                         {
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 1].Value = "商标名称";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 2].Value = "申请号";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 3].Value = "状态时间";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 4].Value = "申请状态";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";
-                            excelPackage.Workbook.Worksheets[1].Cells[1, 6].Value = "文档时间";
+                            try
+                            {
+                                var item = patents[i];
+                                if (i == 0)
+                                {
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 1].Value = "商标名称";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 2].Value = "申请号";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 3].Value = "状态时间";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 4].Value = "申请状态";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 6].Value = "文档时间";
+                                    excelPackage.Workbook.Worksheets[1].Cells[1, 7].Value = "PDF文件";
+
+                                }
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name ?? "";
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num ?? "";
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 3].Value = item.StatusDate ?? "";
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 4].Value = item.Status ?? "";
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 5].Value = item.PublicationDate ?? "";
+                                var docdata = string.Empty;
+
+                                if (item.DocDates != null && item.DocDates.Length > 0)
+                                {
+                                    item.DocDates.ToList().ForEach(m => docdata = docdata + m + "\r\n");
+                                }
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = docdata;// string.Join("\t",item.DocDates);
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 7].Value = item.PdfFile ?? "";
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message, "错误");
+                                break;
+                            }
 
                         }
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name;
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num;
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 3].Value = item.StatusDate;
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 4].Value = item.Status;
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 5].Value = item.PublicationDate;
-                        var docdata = string.Empty;
-                        item.DocDates.ToList().ForEach(m => docdata = docdata + m + "\r\n");
-                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = item.DocDates == null ? "" : docdata;// string.Join("\t",item.DocDates);
+
+                        excelPackage.SaveAs(new FileInfo(saveDialog.FileName));
 
                     }
-
-                    excelPackage.SaveAs(new FileInfo(saveDialog.FileName));
-
+                    MessageBox.Show("导出成功", "提示");
                 }
-                MessageBox.Show("导出成功", "提示");
-
-
+            }
+            else
+            {
+                MessageBox.Show("请等待查询结果完成", "提示");
             }
         }
 
@@ -264,16 +284,25 @@ namespace uspto.Controls
                     var client = new WebClient();
                     foreach (var item in patents)
                     {
-                        if (CancellationTokenSourceDown.IsCancellationRequested)
-                            break;
-                        client.DownloadFile(item.PdfFile, $"{dir}/{item.Name}-{item.Num}.pdf");
-
-                        tbx_rst.Invoke(new MethodInvoker(() =>
+                        try
                         {
-                            pb_down.PerformStep();
-                            lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
-                            tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf Download OK\r\n");
-                        }));
+
+                            if (CancellationTokenSourceDown.IsCancellationRequested)
+                                break;
+                            client.DownloadFile(item.PdfFile, $"{dir}/{item.Name}-{item.Num}.pdf");
+
+                            tbx_rst.Invoke(new MethodInvoker(() =>
+                            {
+                                pb_down.PerformStep();
+                                lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
+                                tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf Download OK\r\n");
+                            }));
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "错误");
+                            break;
+                        }
                     }
 
                     btn_down.Invoke(new MethodInvoker(() =>
