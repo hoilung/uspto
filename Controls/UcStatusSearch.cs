@@ -81,6 +81,11 @@ namespace uspto.Controls
                         request.AddHeader("Referer", "http://tsdr.uspto.gov/");
                         request.Resource = $"statusview/sn{model.Num}";
                         var resp = client.Get(request);
+                        if (!resp.IsSuccessful)
+                        {
+                            resp = client.Get(request);
+                        }
+
                         var step = $"{item} {resp.StatusCode} \r\n";
 
                         tbx_rst.Invoke(new MethodInvoker(() =>
@@ -119,6 +124,10 @@ namespace uspto.Controls
                             await Task.Delay(new Random().Next(500, 2000));
                             request.Resource = $"documentviewer?caseId=sn{model.Num}&";
                             var resp2 = client.Get(request);
+                            if (!resp2.IsSuccessful)
+                            {
+                                resp2 = client.Get(request);
+                            }
                             if (resp2.IsSuccessful)
                             {
                                 htmldoc.LoadHtml(resp2.Content);
@@ -242,22 +251,45 @@ namespace uspto.Controls
             File.AppendAllLines(filename, datas, Encoding.UTF8);
         }
 
-
+        private bool downloadWait = false;
         CancellationTokenSource CancellationTokenSourceDown = new CancellationTokenSource();
         private void btn_down_Click(object sender, EventArgs e)
         {
             if (btn_down.Text == "取消" && CancellationTokenSourceDown != null)
             {
-                CancellationTokenSourceDown.Cancel();
+
+                if (downloadWait)
+                {
+                    if (MessageBox.Show("继续下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        downloadWait = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (MessageBox.Show("暂停下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        downloadWait = true;
+                        return;
+                    }
+                }
+
+                if (MessageBox.Show("取消下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    CancellationTokenSourceDown.Cancel();
+                    return;
+                }
                 return;
+
             }
             CancellationTokenSourceDown.Token.Register(() =>
             {
                 btn_down.Text = "下载PDF";
+                downloadWait = false;
             });
 
             var downlist = patents.Where(m => !string.IsNullOrEmpty(m.PdfFile) && m.PdfFile.StartsWith("http") && m.PdfFile.Contains(".pdf")).ToArray();
-
             if (downlist == null || downlist.Length < 1)
             {
                 MessageBox.Show("没有可供下载的文件");
@@ -266,14 +298,21 @@ namespace uspto.Controls
             DownloadPdf(downlist);
         }
 
+
         private void DownloadPdf(Patent[] patents)
         {
             if (patents != null)
             {
+
+                var queuePatents = new Queue<Patent>();
+
+
                 pb_down.Maximum = patents.Length;
                 pb_down.Value = 0;
                 btn_down.Text = "取消";
-                Task.Run(() =>
+
+
+                Task.Run(async () =>
                 {
 
                     var dir = $"{Directory.GetCurrentDirectory()}/download/{DateTime.Now.ToString("yyyyMMdd")}";
@@ -281,22 +320,47 @@ namespace uspto.Controls
                     {
                         Directory.CreateDirectory(dir);
                     }
-                    var client = new WebClient();
+
                     foreach (var item in patents)
+                    {
+                        queuePatents.Enqueue(item);
+                    }
+                    var client = new WebClient();
+                    while (queuePatents.Any())
                     {
                         try
                         {
+                            if (downloadWait)
+                            {
+                                await Task.Delay(2000);
+                                tbx_rst.Invoke(new MethodInvoker(() =>
+                                {
+                                    tbx_rst.AppendText($"下载暂停，等待恢复\r\n");
+                                }));
+                                continue;
+                            }
 
                             if (CancellationTokenSourceDown.IsCancellationRequested)
+                            {
+                                queuePatents.Clear();
                                 break;
-                            client.DownloadFile(item.PdfFile, $"{dir}/{item.Name}-{item.Num}.pdf");
+                            }
+
+                            var item = queuePatents.Dequeue();
+                            var localfile = $"{dir}/{item.Name}-{item.Num}.pdf";
+
+                            if (!File.Exists(localfile))
+                            {
+                                client.DownloadFile(item.PdfFile, localfile);
+                            }
 
                             tbx_rst.Invoke(new MethodInvoker(() =>
                             {
                                 pb_down.PerformStep();
                                 lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
-                                tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf Download OK\r\n");
+                                tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf {(File.Exists(localfile) ? "File Exists" : "Download OK")}\r\n");
                             }));
+                            await Task.Delay(2000);
                         }
                         catch (Exception ex)
                         {
@@ -305,10 +369,14 @@ namespace uspto.Controls
                         }
                     }
 
+
+
                     btn_down.Invoke(new MethodInvoker(() =>
                     {
                         btn_down.Text = "下载PDF";
                         tbx_rst.AppendText("下载完成\r\n");
+                        downloadWait = false;
+
                     }));
                 }, CancellationTokenSourceDown.Token);
             }
@@ -325,5 +393,9 @@ namespace uspto.Controls
                 SaveData(lines, true);
             }
         }
+
+
+
+
     }
 }
