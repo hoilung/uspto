@@ -1,6 +1,6 @@
 ﻿namespace uspto.Controls
 {
-    partial class UcNumManager
+    partial class UcBase
     {
         /// <summary> 
         /// 必需的设计器变量。
@@ -28,16 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.SuspendLayout();
-            // 
-            // UcNumManager
-            // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+            components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Name = "UcNumManager";
-            this.Size = new System.Drawing.Size(490, 340);
-            this.ResumeLayout(false);
-
         }
 
         #endregion

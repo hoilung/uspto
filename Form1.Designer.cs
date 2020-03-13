@@ -31,13 +31,17 @@
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.ucStatusSearch1 = new uspto.Controls.UcStatusSearch();
+            this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.ucVerify1 = new uspto.Controls.UcVerify();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.tabPage2.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
             // 
             this.tabControl1.Controls.Add(this.tabPage1);
+            this.tabControl1.Controls.Add(this.tabPage2);
             this.tabControl1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabControl1.Location = new System.Drawing.Point(0, 0);
             this.tabControl1.Name = "tabControl1";
@@ -64,6 +68,25 @@
             this.ucStatusSearch1.Size = new System.Drawing.Size(502, 345);
             this.ucStatusSearch1.TabIndex = 0;
             // 
+            // tabPage2
+            // 
+            this.tabPage2.Controls.Add(this.ucVerify1);
+            this.tabPage2.Location = new System.Drawing.Point(4, 22);
+            this.tabPage2.Name = "tabPage2";
+            this.tabPage2.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPage2.Size = new System.Drawing.Size(508, 351);
+            this.tabPage2.TabIndex = 1;
+            this.tabPage2.Text = "授权验证";
+            this.tabPage2.UseVisualStyleBackColor = true;
+            // 
+            // ucVerify1
+            // 
+            this.ucVerify1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ucVerify1.Location = new System.Drawing.Point(3, 3);
+            this.ucVerify1.Name = "ucVerify1";
+            this.ucVerify1.Size = new System.Drawing.Size(502, 345);
+            this.ucVerify1.TabIndex = 0;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
@@ -73,9 +96,11 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.Name = "Form1";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "uspto";
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
+            this.tabPage2.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -85,6 +110,8 @@
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private Controls.UcStatusSearch ucStatusSearch1;
+        private System.Windows.Forms.TabPage tabPage2;
+        private Controls.UcVerify ucVerify1;
     }
 }
 

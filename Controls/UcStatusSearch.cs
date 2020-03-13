@@ -17,12 +17,12 @@ using System.Threading;
 
 namespace uspto.Controls
 {
-    public partial class UcStatusSearch : UserControl
+    public partial class UcStatusSearch : UcBase
     {
         public UcStatusSearch()
         {
             InitializeComponent();
-
+           
         }
 
         private void btn_clear_Click(object sender, EventArgs e)

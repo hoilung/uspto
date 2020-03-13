@@ -46,7 +46,7 @@
     
     mimetype: application/x-microsoft.net.object.binary.base64
     value   : The object must be serialized with 
-            : System.Serialization.Formatters.Binary.BinaryFormatter
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
     
     mimetype: application/x-microsoft.net.object.soap.base64
@@ -60,6 +60,7 @@
             : and then encoded with base64 encoding.
     -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
@@ -68,9 +69,10 @@
               <xsd:sequence>
                 <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" />
+              <xsd:attribute name="name" use="required" type="xsd:string" />
               <xsd:attribute name="type" type="xsd:string" />
               <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
@@ -85,9 +87,10 @@
                 <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
                 <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
               <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
               <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
@@ -109,9 +112,25 @@
     <value>2.0</value>
   </resheader>
   <resheader name="reader">
-    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <resheader name="writer">
-    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="license" xml:space="preserve">
+    <value>license.cert</value>
+    <comment>授权文件</comment>
+  </data>
+  <data name="pk" xml:space="preserve">
+    <value>BwIAAACkAABSU0EyAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0SxtGmcsNn7ElR9y2cC3o1d+IIOSDinVieqt2IcPpbaS0hlOdbTxUc2q2NEV9NCS3frd0f5K8pLSqv2dW60XNtTEeg55H+YnJN89aX5O5VUjILngr6x65z9lSJEsdWn99vjfJFt7XWce6PjS5B2/m0/p0/4Qcjsh1vXtXROP7DNFL3TpHDVMoR+f7OUBzymfa4F2aJKxy2d4OpTbM2rUuodJrW26ZjXD/FNLlkicJErhqegu68eQsdwfGXehEa9UA1AkhhlqLUBbLp/upp+N3hzvhIOgehq2zffeEaUoYQ358SYb09JFesnXExR+eu8oWf2NrGstI+tBWjDUZ5F+F3L36i2/QAlV64Q5HopTMPNDLGXRHnjsvEFaTTW1ns8s1vbrNdPnSENb8QS3x/0XI7JXLxiUO+7bAEZnFfxrIaK/JKE5SWVKKGY9SiB4RAWocC3cEwBgCuwkqtz8HhAU6wF404mkNuRuIJbCh7ccqZkV4oKSjASGRyYQYBxD7QyqH62uRNLGQYldKbhb8ASd+VJKAQcczwXBdcjMYronctm/mQ5GOKudVd5VIwUdk35CjjPP6Icb4Rf89e9hvshhn3WF+JGuQkegvfhpzgMW8KeKeiHvAVVrgqsZR12WLSoD3ynBqoB+04E0igoc950CYGyo6To6TcL+XKFFbvyj4+rqGhvYN3/S3V9QjWsBTB9zGTK6Opb7WsXIgxgttVLyrOmxMDmOK3CqAhVSRSkfBQA6dQGZzGMhutlqJBGUHhIw6QRGJUklTcvlpeqM08AH54KQ9T3etAyGSLkviZ6Vx/PnNh00y1nQbDgAJhB+6/RGnNce6lkkpiE5lO/0UvxDsgFFROaJKdu4YY1dUX5WloaiisjUg49mhHS8viyU9VRJ8Cz5xH5UjlpEqmDRAZvNxK7IYB1F4o9T32nur8m7JNqICIlkFsQlqCPgl3115HGMcyJc7hYHh9G6y5sxnTcz87ugssCa7eAJLmy6baz/gvzH14PBGWq5Je1/zM6qUOBMHjTblNy7J6OiQSHbbKciArP1QaMyvpWjNHnKHJW2/ON7k1KXxMIb7eMnUbV62J7qRWJoqeUbV+tmslW/h3+vOAlBQGdz6v/FyGxWeGza9whswzH1+NHLY+MwQZt8dTwsp3ga+17pDRKwKC7xXsna3vJEBq90pTrIwGW8LJ0RcxK4=</value>
+    <comment>rsa</comment>
+  </data>
+  <data name="pub" xml:space="preserve">
+    <value>BgIAAACkAABSU0ExAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0</value>
+    <comment>rsapub</comment>
+  </data>
+  <data name="userid" xml:space="preserve">
+    <value>userid.conf</value>
+    <comment>用户机器码</comment>
+  </data>
 </root>

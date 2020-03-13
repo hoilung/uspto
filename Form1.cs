@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using uspto.Controls;
 
 namespace uspto
 {
@@ -15,8 +17,14 @@ namespace uspto
         public Form1()
         {
             InitializeComponent();
-            this.Text = this.ProductName +" v"+ this.ProductVersion;
-
+            this.Text = this.ProductName + " v" + this.ProductVersion;
+            if (!ucStatusSearch1.LicenseVerify())
+            {
+                tabControl1.TabPages.Remove(tabPage1);
+            }else
+            {
+                tabControl1.TabPages.Remove(tabPage2);
+            }
         }
     }
 }
