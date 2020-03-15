@@ -31,10 +31,18 @@ namespace uspto.Controls
 
                 if (MessageBox.Show("受否验证授权文件？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
                 {
-                    File.Copy(openFile.FileName, Path.Combine(Directory.GetCurrentDirectory(), Properties.Resources.license), true);
+                    try
+                    {
+                        File.Copy(openFile.FileName, Path.Combine(Directory.GetCurrentDirectory(), Properties.Resources.license), true);
+                    }
+                    catch (Exception)
+                    {
+                        MessageBox.Show("文件可能被其他程序占用，请关闭占用的程序或请复制授权文件到软件目录下", "提示", MessageBoxButtons.OK);
+                        return;
+                    }
                     if (LicenseVerify())
-                    {                        
-                        lb_msg.Text = "验证授权成功,请重新打开软件使用";                        
+                    {
+                        lb_msg.Text = "验证授权成功,请重新打开软件使用";
                     }
                     else
                     {
