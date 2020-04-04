@@ -20,7 +20,8 @@ namespace uspto.Models
 
         public string PdfFile { get; set; } = string.Empty;
 
-        public string [] DocDates { get; set; }
-                
+        public string[] DocDates { get; set; }
+
+        public Dictionary<string, string> TEASPlusNewApplication { get; set; } = new Dictionary<string, string>();
     }
 }

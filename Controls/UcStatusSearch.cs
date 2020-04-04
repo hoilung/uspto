@@ -22,7 +22,7 @@ namespace uspto.Controls
         public UcStatusSearch()
         {
             InitializeComponent();
-           
+
         }
 
         private void btn_clear_Click(object sender, EventArgs e)
@@ -142,6 +142,78 @@ namespace uspto.Controls
                                     {
                                         model.PdfFile = cert.urlPathList[0];
                                     }
+                                    var newapplication = docslist.caseDocs.Where(m => m.description.Contains("New Application")).FirstOrDefault();
+                                    if (newapplication != null && newapplication.urlPathList.Length > 0)
+                                    {
+                                        var newUrl = newapplication.urlPathList[0];
+                                        if (!string.IsNullOrEmpty(newUrl) && newUrl.StartsWith("http"))
+                                        {
+                                            request.Resource = newUrl;
+                                            var resp3 = client.Get(request);
+                                            if (resp3.IsSuccessful)
+                                            {                                                
+                                                htmldoc.LoadHtml(resp3.Content);
+
+                                                try
+                                                {
+                                                    var nameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr name-corr']");
+                                                    if (nameNode != null)
+                                                        model.TEASPlusNewApplication.Add("NAME", nameNode.InnerText.Trim());
+                                                    var streetNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr street-corr']");
+                                                    if (streetNode != null)
+                                                        model.TEASPlusNewApplication.Add("STREET", streetNode.InnerText.Trim());
+                                                    var cityNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr city-corr']");
+                                                    if (cityNode != null)
+                                                        model.TEASPlusNewApplication.Add("CITY", cityNode.InnerText.Trim());
+                                                    var stateNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr state-corr']");
+                                                    if (stateNode != null)
+                                                        model.TEASPlusNewApplication.Add("STATE", stateNode.InnerText.Trim());
+                                                    var countryNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr country-corr']");
+                                                    if (countryNode != null)
+                                                        model.TEASPlusNewApplication.Add("COUNTRY", countryNode.InnerText.Trim());
+                                                    var postalcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr postalcd-corr']");
+                                                    if (postalcdNode != null)
+                                                        model.TEASPlusNewApplication.Add("ZIP", postalcdNode.InnerText.Trim());
+                                                    var emailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr emailAddr-corr']");
+                                                    if (emailNode != null)
+                                                        model.TEASPlusNewApplication.Add("EMAIL ADDRESS", emailNode.InnerText.Trim());
+                                                    var auemailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr auEmail-corr']");
+                                                    if (auemailNode != null)
+                                                        model.TEASPlusNewApplication.Add("AUTHORIZED TO COMMUNICATE VIA EMAIL", auemailNode.InnerText.Trim());
+                                                    var numclassesHeadingNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-heading']");
+                                                    if (numclassesHeadingNode != null)
+                                                        model.TEASPlusNewApplication.Add("APPLICATION FILING OPTION", numclassesHeadingNode.InnerText.Trim());
+                                                    var numclassesFeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-fees']");
+                                                    if (numclassesFeesNode != null)
+                                                        model.TEASPlusNewApplication.Add("NUMBER OF CLASSES", numclassesFeesNode.InnerText.Trim());
+                                                    var feeNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees fee-per-class-fees']");
+                                                    if (feeNode != null)
+                                                        model.TEASPlusNewApplication.Add("FEE PER CLASS", feeNode.InnerText.Trim());
+                                                    var totalfeefeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees totalfee-fees']");
+                                                    if (totalfeefeesNode != null)
+                                                        model.TEASPlusNewApplication.Add("TOTAL FEE PAID", totalfeefeesNode.InnerText.Trim());
+                                                    var signamesignNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures signame-sign']");
+                                                    if (signamesignNode != null)
+                                                        model.TEASPlusNewApplication.Add("SIGNATURE", signamesignNode.InnerText.Trim());
+                                                    var signatorynameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures signatoryname-sign']");
+                                                    if (signatorynameNode != null)
+                                                        model.TEASPlusNewApplication.Add("SIGNATORY'S NAME", signatorynameNode.InnerText.Trim());
+                                                    var signpositionNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures sign-position-sign']");
+                                                    if (signpositionNode != null)
+                                                        model.TEASPlusNewApplication.Add("SIGNATORY'S POSITION", signpositionNode.InnerText.Trim());
+                                                    var signdtNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures sign-dt-sign']");
+                                                    if (signdtNode != null)
+                                                        model.TEASPlusNewApplication.Add("DATE SIGNED", signdtNode.InnerText.Trim());
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    continue;
+                                                    //throw;
+                                                }
+
+                                            }
+                                        }
+                                    }
                                 }
                             }
 
@@ -200,6 +272,17 @@ namespace uspto.Controls
                                     excelPackage.Workbook.Worksheets[1].Cells[1, 6].Value = "文档时间";
                                     excelPackage.Workbook.Worksheets[1].Cells[1, 7].Value = "PDF文件";
 
+                                    if (item.TEASPlusNewApplication != null)
+                                    {
+                                        int j = 8;
+                                        foreach (var info in item.TEASPlusNewApplication)
+                                        {                                            
+                                            excelPackage.Workbook.Worksheets[1].Cells[1, j].Value = info.Key;
+                                            j++;
+                                        }
+                                    }
+
+
                                 }
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name ?? "";
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num ?? "";
@@ -214,6 +297,17 @@ namespace uspto.Controls
                                 }
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = docdata;// string.Join("\t",item.DocDates);
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 7].Value = item.PdfFile ?? "";
+
+                                if (item.TEASPlusNewApplication != null)
+                                {
+                                    int j = 8;
+                                    foreach (var info in item.TEASPlusNewApplication)
+                                    {
+                                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, j].Value = info.Value;
+                                        j++;
+                                    }
+                                }
+
                             }
                             catch (Exception ex)
                             {
