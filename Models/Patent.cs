@@ -10,6 +10,8 @@ namespace uspto.Models
     {
         public Patent()
         {
+            this.TEASPlusNewApplication.Add("INTERNATIONAL CLASS", "");
+            this.TEASPlusNewApplication.Add("IDENTIFICATION", "");
 
             this.TEASPlusNewApplication.Add("NAME", "");
             this.TEASPlusNewApplication.Add("STREET", "");

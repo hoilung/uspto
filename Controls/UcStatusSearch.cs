@@ -156,6 +156,14 @@ namespace uspto.Controls
 
                                                 try
                                                 {
+                                                    var classcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new classcd-goods']");
+                                                    if (classcdNode != null)
+                                                        model.TEASPlusNewApplication["INTERNATIONAL CLASS"] = System.Web.HttpUtility.HtmlDecode(classcdNode.InnerText).Trim();
+
+                                                    var descNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new desc-goods']");
+                                                    if (descNode != null)
+                                                        model.TEASPlusNewApplication["IDENTIFICATION"] = descNode.InnerText.Trim();
+
                                                     var nameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr name-corr']");
                                                     if (nameNode != null)
                                                         model.TEASPlusNewApplication["NAME"] = nameNode.InnerText.Trim();
@@ -223,7 +231,7 @@ namespace uspto.Controls
                         }
                         list.Add(model);
 
-                        await Task.Delay(new Random().Next(2000, 3000));
+                        await Task.Delay(new Random().Next(1000, 2000));
                     }
 
                     patents.Clear();
