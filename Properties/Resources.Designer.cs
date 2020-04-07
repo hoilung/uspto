@@ -70,15 +70,6 @@ namespace uspto.Properties {
         }
         
         /// <summary>
-        ///   查找类似 BwIAAACkAABSU0EyAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0SxtGmcsNn7ElR9y2cC3o1d+IIOSDinVieqt2IcPpbaS0hlOdbTxUc2q2NEV9NCS3frd0f5K8pLSqv2dW60XNtTEeg55H+YnJN89aX5O5VUjILngr6x65z9lSJEsdWn99vjfJFt7XWce6PjS5 [字符串的其余部分被截断]&quot;; 的本地化字符串。
-        /// </summary>
-        internal static string pk {
-            get {
-                return ResourceManager.GetString("pk", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   查找类似 BgIAAACkAABSU0ExAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0 的本地化字符串。
         /// </summary>
         internal static string pub {
