@@ -70,6 +70,16 @@ namespace uspto.Properties {
         }
         
         /// <summary>
+        ///   查找类似于 (图标) 的 System.Drawing.Icon 类型的本地化资源。
+        /// </summary>
+        internal static System.Drawing.Icon logo {
+            get {
+                object obj = ResourceManager.GetObject("logo", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 BgIAAACkAABSU0ExAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0 的本地化字符串。
         /// </summary>
         internal static string pub {

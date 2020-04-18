@@ -47,5 +47,9 @@ namespace uspto.Models
         public string[] DocDates { get; set; }
 
         public Dictionary<string, string> TEASPlusNewApplication { get; set; } = new Dictionary<string, string>();
+        /// <summary>
+        /// 复生文件html地址
+        /// </summary>
+        public string OffcActionFile { get; internal set; }
     }
 }

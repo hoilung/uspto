@@ -36,6 +36,7 @@
             this.lb_staus = new System.Windows.Forms.Label();
             this.pb_nums = new System.Windows.Forms.ProgressBar();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.btn_down2 = new System.Windows.Forms.Button();
             this.lb_down = new System.Windows.Forms.Label();
             this.pb_down = new System.Windows.Forms.ProgressBar();
             this.btn_down = new System.Windows.Forms.Button();
@@ -59,7 +60,7 @@
             // 
             this.btn_search.Location = new System.Drawing.Point(395, 22);
             this.btn_search.Name = "btn_search";
-            this.btn_search.Size = new System.Drawing.Size(75, 23);
+            this.btn_search.Size = new System.Drawing.Size(89, 23);
             this.btn_search.TabIndex = 2;
             this.btn_search.Text = "查询";
             this.btn_search.UseVisualStyleBackColor = true;
@@ -69,7 +70,7 @@
             // 
             this.btn_load.Location = new System.Drawing.Point(395, 51);
             this.btn_load.Name = "btn_load";
-            this.btn_load.Size = new System.Drawing.Size(75, 23);
+            this.btn_load.Size = new System.Drawing.Size(89, 23);
             this.btn_load.TabIndex = 3;
             this.btn_load.Text = "载入";
             this.btn_load.UseVisualStyleBackColor = true;
@@ -79,7 +80,7 @@
             // 
             this.btn_clear.Location = new System.Drawing.Point(395, 80);
             this.btn_clear.Name = "btn_clear";
-            this.btn_clear.Size = new System.Drawing.Size(75, 23);
+            this.btn_clear.Size = new System.Drawing.Size(89, 23);
             this.btn_clear.TabIndex = 4;
             this.btn_clear.Text = "清空";
             this.btn_clear.UseVisualStyleBackColor = true;
@@ -96,7 +97,7 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(490, 140);
+            this.groupBox1.Size = new System.Drawing.Size(500, 140);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "查询";
@@ -120,18 +121,29 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.Controls.Add(this.btn_down2);
             this.groupBox2.Controls.Add(this.lb_down);
             this.groupBox2.Controls.Add(this.pb_down);
             this.groupBox2.Controls.Add(this.btn_down);
             this.groupBox2.Controls.Add(this.btn_export);
             this.groupBox2.Controls.Add(this.tbx_rst);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBox2.Location = new System.Drawing.Point(0, 146);
+            this.groupBox2.Location = new System.Drawing.Point(0, 150);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(490, 194);
+            this.groupBox2.Size = new System.Drawing.Size(500, 194);
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "结果";
+            // 
+            // btn_down2
+            // 
+            this.btn_down2.Location = new System.Drawing.Point(396, 78);
+            this.btn_down2.Name = "btn_down2";
+            this.btn_down2.Size = new System.Drawing.Size(89, 23);
+            this.btn_down2.TabIndex = 5;
+            this.btn_down2.Text = "复审文件下载";
+            this.btn_down2.UseVisualStyleBackColor = true;
+            this.btn_down2.Click += new System.EventHandler(this.btn_down2_Click);
             // 
             // lb_down
             // 
@@ -154,9 +166,9 @@
             // 
             this.btn_down.Location = new System.Drawing.Point(396, 49);
             this.btn_down.Name = "btn_down";
-            this.btn_down.Size = new System.Drawing.Size(75, 23);
+            this.btn_down.Size = new System.Drawing.Size(89, 23);
             this.btn_down.TabIndex = 2;
-            this.btn_down.Text = "下载PDF";
+            this.btn_down.Text = "注册证书下载";
             this.btn_down.UseVisualStyleBackColor = true;
             this.btn_down.Click += new System.EventHandler(this.btn_down_Click);
             // 
@@ -164,9 +176,9 @@
             // 
             this.btn_export.Location = new System.Drawing.Point(395, 20);
             this.btn_export.Name = "btn_export";
-            this.btn_export.Size = new System.Drawing.Size(75, 23);
+            this.btn_export.Size = new System.Drawing.Size(89, 23);
             this.btn_export.TabIndex = 1;
-            this.btn_export.Text = "导出";
+            this.btn_export.Text = "导出excel";
             this.btn_export.UseVisualStyleBackColor = true;
             this.btn_export.Click += new System.EventHandler(this.btn_export_Click);
             // 
@@ -188,7 +200,7 @@
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Name = "UcStatusSearch";
-            this.Size = new System.Drawing.Size(490, 340);
+            this.Size = new System.Drawing.Size(500, 344);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.groupBox2.ResumeLayout(false);
@@ -211,5 +223,6 @@
         private System.Windows.Forms.Button btn_down;
         private System.Windows.Forms.ProgressBar pb_down;
         private System.Windows.Forms.Label lb_down;
+        private System.Windows.Forms.Button btn_down2;
     }
 }

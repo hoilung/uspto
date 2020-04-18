@@ -86,14 +86,7 @@ namespace uspto.Controls
                             resp = client.Get(request);
                         }
 
-                        var step = $"{item} {resp.StatusCode} \r\n";
-
-                        tbx_rst.Invoke(new MethodInvoker(() =>
-                        {
-                            pb_nums.PerformStep();
-                            tbx_rst.AppendText(step);
-                            lb_staus.Text = pb_nums.Value + "/" + pb_nums.Maximum;
-                        }));
+                        var consoleInfo = $"{item} status {resp.StatusCode}";
 
                         if (resp.IsSuccessful)
                         {
@@ -120,14 +113,18 @@ namespace uspto.Controls
                             {
                                 model.PublicationDate = pubDate.InnerText.Trim();
                             }
-
-                            await Task.Delay(new Random().Next(500, 2000));
+#if !DEBUG
+                            await Task.Delay(new Random().Next(200, 500));
+#endif
                             request.Resource = $"documentviewer?caseId=sn{model.Num}&";
                             var resp2 = client.Get(request);
+
+                            consoleInfo += " document " + resp2.StatusCode;
                             if (!resp2.IsSuccessful)
                             {
                                 resp2 = client.Get(request);
                             }
+
                             if (resp2.IsSuccessful)
                             {
                                 htmldoc.LoadHtml(resp2.Content);
@@ -140,7 +137,12 @@ namespace uspto.Controls
                                     var cert = docslist.caseDocs.Where(m => m.description.Contains("Registration Certificate")).FirstOrDefault();
                                     if (cert != null && cert.urlPathList.Length > 0)
                                     {
-                                        model.PdfFile = cert.urlPathList[0];
+                                        model.PdfFile = cert.urlPathList[0];//注册文件下载地址                                       
+                                    }
+                                    var oafile = docslist.caseDocs.Where(m => m.description.Contains("Offc Action Outgoing")).FirstOrDefault();
+                                    if (oafile != null && oafile.urlPathList.Length > 0)
+                                    {
+                                        model.OffcActionFile = oafile.urlPathList[0];//复生文件html地址
                                     }
                                     var newapplication = docslist.caseDocs.Where(m => m.description.Contains("New Application")).FirstOrDefault();
                                     if (newapplication != null && newapplication.urlPathList.Length > 0)
@@ -150,6 +152,7 @@ namespace uspto.Controls
                                         {
                                             request.Resource = newUrl;
                                             var resp3 = client.Get(request);
+                                            consoleInfo += " new application " + resp2.StatusCode;
                                             if (resp3.IsSuccessful)
                                             {
                                                 htmldoc.LoadHtml(resp3.Content);
@@ -229,9 +232,16 @@ namespace uspto.Controls
                             }
 
                         }
+                        tbx_rst.Invoke(new MethodInvoker(() =>
+                        {
+                            pb_nums.PerformStep();
+                            tbx_rst.AppendText(consoleInfo + "\r\n");
+                            lb_staus.Text = pb_nums.Value + "/" + pb_nums.Maximum;
+                        }));
                         list.Add(model);
-
+#if !DEBUG
                         await Task.Delay(new Random().Next(1000, 2000));
+#endif
                     }
 
                     patents.Clear();
@@ -391,21 +401,65 @@ namespace uspto.Controls
             }
             CancellationTokenSourceDown.Token.Register(() =>
             {
-                btn_down.Text = "下载PDF";
+                btn_down.Text = "注册证书下载";
                 downloadWait = false;
             });
 
             var downlist = patents.Where(m => !string.IsNullOrEmpty(m.PdfFile) && m.PdfFile.StartsWith("http") && m.PdfFile.Contains(".pdf")).ToArray();
             if (downlist == null || downlist.Length < 1)
             {
-                MessageBox.Show("没有可供下载的文件");
+                MessageBox.Show("没有可供下载的 Registration Certificate", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-            DownloadPdf(downlist);
+            DownloadPdf(downlist, DownloadType.RegistrationCertificate);
         }
 
+        private void btn_down2_Click(object sender, EventArgs e)
+        {
+            if (btn_down2.Text == "取消" && CancellationTokenSourceDown != null)
+            {
 
-        private void DownloadPdf(Patent[] patents)
+                if (downloadWait)
+                {
+                    if (MessageBox.Show("继续下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        downloadWait = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (MessageBox.Show("暂停下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        downloadWait = true;
+                        return;
+                    }
+                }
+
+                if (MessageBox.Show("取消下载？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                {
+                    CancellationTokenSourceDown.Cancel();
+                    return;
+                }
+                return;
+
+            }
+            CancellationTokenSourceDown.Token.Register(() =>
+            {
+                btn_down2.Text = "复审文件下载";
+                downloadWait = false;
+            });
+
+            var downlist = patents.Where(m => !string.IsNullOrEmpty(m.OffcActionFile) && m.OffcActionFile.StartsWith("http")).ToArray();
+            if (downlist == null || downlist.Length < 1)
+            {
+                MessageBox.Show("没有可供下载的 Offc Action Outgoing", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            DownloadPdf(downlist, DownloadType.OffcActionOutgoing);
+        }
+
+        private void DownloadPdf(Patent[] patents, DownloadType downloadType)
         {
             if (patents != null)
             {
@@ -415,13 +469,17 @@ namespace uspto.Controls
 
                 pb_down.Maximum = patents.Length;
                 pb_down.Value = 0;
-                btn_down.Text = "取消";
+                if (downloadType == DownloadType.RegistrationCertificate)
+                    btn_down.Text = "取消";
+                if (downloadType == DownloadType.OffcActionOutgoing)
+                    btn_down2.Text = "取消";
 
 
                 Task.Run(async () =>
                 {
 
-                    var dir = $"{Directory.GetCurrentDirectory()}/download/{DateTime.Now.ToString("yyyyMMdd")}";
+                    var dir = $"{Directory.GetCurrentDirectory()}/download/{DateTime.Now.ToString("yyyyMMdd")}/{downloadType}";
+
                     if (!Directory.Exists(dir))
                     {
                         Directory.CreateDirectory(dir);
@@ -438,7 +496,7 @@ namespace uspto.Controls
                         {
                             if (downloadWait)
                             {
-                                await Task.Delay(2000);
+                                await Task.Delay(5000);
                                 tbx_rst.Invoke(new MethodInvoker(() =>
                                 {
                                     tbx_rst.AppendText($"下载暂停，等待恢复\r\n");
@@ -454,19 +512,33 @@ namespace uspto.Controls
 
                             var item = queuePatents.Dequeue();
                             var localfile = $"{dir}/{item.Name}-{item.Num}.pdf";
+                            if (downloadType == DownloadType.OffcActionOutgoing)
+                            {
+                                localfile = $"{dir}/{item.Name}-{item.Num}.html";
+                            }
 
+                            var cosoleinfo = $"{item.Name}-{item.Num} ";
                             if (!File.Exists(localfile))
                             {
-                                client.DownloadFile(item.PdfFile, localfile);
+                                if (downloadType == DownloadType.RegistrationCertificate)
+                                    client.DownloadFile(item.PdfFile, localfile);
+                                if (downloadType == DownloadType.OffcActionOutgoing)
+                                    client.DownloadFile(item.OffcActionFile, localfile);
+
+                                cosoleinfo += $" {downloadType} Download OK\r\n";
+                            }
+                            else
+                            {
+                                cosoleinfo += " File Exists\r\n";
                             }
 
                             tbx_rst.Invoke(new MethodInvoker(() =>
                             {
                                 pb_down.PerformStep();
                                 lb_down.Text = $"{pb_down.Value}/{pb_down.Maximum}";
-                                tbx_rst.AppendText($"{item.Name}-{item.Num}.pdf {(File.Exists(localfile) ? "File Exists" : "Download OK")}\r\n");
+                                tbx_rst.AppendText(cosoleinfo);
                             }));
-                            await Task.Delay(2000);
+                            await Task.Delay(new Random().Next(1000, 2000));
                         }
                         catch (Exception ex)
                         {
@@ -479,8 +551,12 @@ namespace uspto.Controls
 
                     btn_down.Invoke(new MethodInvoker(() =>
                     {
-                        btn_down.Text = "下载PDF";
-                        tbx_rst.AppendText("下载完成\r\n");
+                        if (downloadType == DownloadType.RegistrationCertificate)
+                            btn_down.Text = "注册证书下载";
+                        else
+                            btn_down2.Text = "复审文件下载";
+
+                        tbx_rst.AppendText(downloadType + " 下载完成\r\n");
                         downloadWait = false;
 
                     }));
@@ -499,8 +575,6 @@ namespace uspto.Controls
                 SaveData(lines, true);
             }
         }
-
-
 
 
     }

@@ -121,6 +121,10 @@
     <value>license.cert</value>
     <comment>授权文件</comment>
   </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="logo" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\logo.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="pub" xml:space="preserve">
     <value>BgIAAACkAABSU0ExAAgAAAEAAQD5vRdpOq1FhHkBWWPSAM8lHIUNhmY77ATgDq7AHiGl+XTdWqFssaNrZkltYqhi7ed0dJ0uGKWKy5l4oOu+9n8eXRTwWrBJvlWZyTKmLj1WmIPsjjR6jqn7w54dV7QrhML7NsHhgsCLLAWj+AT4KeMpsgNM6NvvmalP145AfgknD7mF5zvs+x4IHh85UY//fUdz8+jq80ab8LUnswaB59bf2OYgrq7sduk8fP38E+ixVNgmBN+AG3TAmHz8F+rTdakyEnAiMmHeOGNbata7v03tvem5o89XOWUi8vHozKTmiF/2YKVW9Q1tdhp+AOGMnMUgbG+7d5b5xXJbbUGEEhS0</value>
     <comment>rsapub</comment>
