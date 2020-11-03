@@ -18,6 +18,7 @@ namespace uspto
         {
             InitializeComponent();
             this.Text = this.ProductName + " v" + this.ProductVersion;
+#if !DEBUG
             if (!ucStatusSearch1.LicenseVerify())
             {
                 tabControl1.TabPages.Remove(tabPage1);
@@ -25,6 +26,7 @@ namespace uspto
             {
                 tabControl1.TabPages.Remove(tabPage2);
             }
+#endif
         }
     }
 }

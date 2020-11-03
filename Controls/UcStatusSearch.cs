@@ -218,6 +218,10 @@ namespace uspto.Controls
                                                     var signdtNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures sign-dt-sign']");
                                                     if (signdtNode != null)
                                                         model.TEASPlusNewApplication["DATE SIGNED"] = signdtNode.InnerText.Trim();
+
+                                                    var filingDataNode = htmldoc.DocumentNode.SelectSingleNode("//table//tr//td/b[contains(text(),'Filing')]/../b[2]");
+                                                    if (filingDataNode != null)
+                                                        model.TEASPlusNewApplication["Filing Date"] = filingDataNode.InnerText.Trim();
                                                 }
                                                 catch (Exception ex)
                                                 {
@@ -267,9 +271,9 @@ namespace uspto.Controls
             {
 
                 var saveDialog = new SaveFileDialog();
-                saveDialog.Filter = "xls|*.xls";
+                saveDialog.Filter = "xlsx|*.xlsx";
                 saveDialog.FileName = DateTime.Now.ToString("yyyyMMdd-HHmmssfff");
-                saveDialog.DefaultExt = ".xls";
+                saveDialog.DefaultExt = ".xlsx";
                 saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
