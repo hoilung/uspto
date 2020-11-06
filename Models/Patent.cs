@@ -10,7 +10,9 @@ namespace uspto.Models
     {
         public Patent()
         {
-            this.TEASPlusNewApplication.Add("INTERNATIONAL CLASS", "");
+            this.TEASPlusNewApplication.Add("Filing Date", "");//1.4.2.1 后加
+
+            this.TEASPlusNewApplication.Add("INTERNATIONAL CLASS", "");            
             this.TEASPlusNewApplication.Add("IDENTIFICATION", "");
 
             this.TEASPlusNewApplication.Add("NAME", "");
@@ -30,6 +32,7 @@ namespace uspto.Models
             this.TEASPlusNewApplication.Add("SIGNATORY'S NAME", "");
             this.TEASPlusNewApplication.Add("SIGNATORY'S POSITION", "");
             this.TEASPlusNewApplication.Add("DATE SIGNED", "");
+            
 
         }
         public string Name { get; set; } = string.Empty;

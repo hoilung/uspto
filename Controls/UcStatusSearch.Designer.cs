@@ -33,6 +33,7 @@
             this.btn_load = new System.Windows.Forms.Button();
             this.btn_clear = new System.Windows.Forms.Button();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbx_spiderAll = new System.Windows.Forms.CheckBox();
             this.lb_staus = new System.Windows.Forms.Label();
             this.pb_nums = new System.Windows.Forms.ProgressBar();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -48,17 +49,17 @@
             // 
             // tbx_nums
             // 
-            this.tbx_nums.Location = new System.Drawing.Point(6, 20);
+            this.tbx_nums.Location = new System.Drawing.Point(3, 20);
             this.tbx_nums.Multiline = true;
             this.tbx_nums.Name = "tbx_nums";
             this.tbx_nums.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.tbx_nums.Size = new System.Drawing.Size(384, 96);
+            this.tbx_nums.Size = new System.Drawing.Size(384, 105);
             this.tbx_nums.TabIndex = 1;
             this.tbx_nums.WordWrap = false;
             // 
             // btn_search
             // 
-            this.btn_search.Location = new System.Drawing.Point(395, 22);
+            this.btn_search.Location = new System.Drawing.Point(393, 44);
             this.btn_search.Name = "btn_search";
             this.btn_search.Size = new System.Drawing.Size(89, 23);
             this.btn_search.TabIndex = 2;
@@ -68,7 +69,7 @@
             // 
             // btn_load
             // 
-            this.btn_load.Location = new System.Drawing.Point(395, 51);
+            this.btn_load.Location = new System.Drawing.Point(393, 73);
             this.btn_load.Name = "btn_load";
             this.btn_load.Size = new System.Drawing.Size(89, 23);
             this.btn_load.TabIndex = 3;
@@ -78,7 +79,7 @@
             // 
             // btn_clear
             // 
-            this.btn_clear.Location = new System.Drawing.Point(395, 80);
+            this.btn_clear.Location = new System.Drawing.Point(393, 102);
             this.btn_clear.Name = "btn_clear";
             this.btn_clear.Size = new System.Drawing.Size(89, 23);
             this.btn_clear.TabIndex = 4;
@@ -88,6 +89,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.cbx_spiderAll);
             this.groupBox1.Controls.Add(this.lb_staus);
             this.groupBox1.Controls.Add(this.pb_nums);
             this.groupBox1.Controls.Add(this.tbx_nums);
@@ -97,15 +99,28 @@
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Top;
             this.groupBox1.Location = new System.Drawing.Point(0, 0);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(500, 140);
+            this.groupBox1.Size = new System.Drawing.Size(500, 151);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "查询";
             // 
+            // cbx_spiderAll
+            // 
+            this.cbx_spiderAll.AutoSize = true;
+            this.cbx_spiderAll.Checked = true;
+            this.cbx_spiderAll.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbx_spiderAll.Location = new System.Drawing.Point(395, 22);
+            this.cbx_spiderAll.Name = "cbx_spiderAll";
+            this.cbx_spiderAll.Size = new System.Drawing.Size(96, 16);
+            this.cbx_spiderAll.TabIndex = 7;
+            this.cbx_spiderAll.Text = "查询全部信息";
+            this.cbx_spiderAll.UseVisualStyleBackColor = true;
+            this.cbx_spiderAll.CheckedChanged += new System.EventHandler(this.cbx_spiderAll_CheckedChanged);
+            // 
             // lb_staus
             // 
             this.lb_staus.AutoSize = true;
-            this.lb_staus.Location = new System.Drawing.Point(396, 122);
+            this.lb_staus.Location = new System.Drawing.Point(396, 131);
             this.lb_staus.Name = "lb_staus";
             this.lb_staus.Size = new System.Drawing.Size(41, 12);
             this.lb_staus.TabIndex = 6;
@@ -113,9 +128,9 @@
             // 
             // pb_nums
             // 
-            this.pb_nums.Location = new System.Drawing.Point(6, 122);
+            this.pb_nums.Location = new System.Drawing.Point(6, 131);
             this.pb_nums.Name = "pb_nums";
-            this.pb_nums.Size = new System.Drawing.Size(384, 12);
+            this.pb_nums.Size = new System.Drawing.Size(381, 12);
             this.pb_nums.Step = 1;
             this.pb_nums.TabIndex = 5;
             // 
@@ -128,16 +143,16 @@
             this.groupBox2.Controls.Add(this.btn_export);
             this.groupBox2.Controls.Add(this.tbx_rst);
             this.groupBox2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.groupBox2.Location = new System.Drawing.Point(0, 150);
+            this.groupBox2.Location = new System.Drawing.Point(0, 157);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(500, 194);
+            this.groupBox2.Size = new System.Drawing.Size(500, 187);
             this.groupBox2.TabIndex = 6;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "结果";
             // 
             // btn_down2
             // 
-            this.btn_down2.Location = new System.Drawing.Point(396, 78);
+            this.btn_down2.Location = new System.Drawing.Point(394, 78);
             this.btn_down2.Name = "btn_down2";
             this.btn_down2.Size = new System.Drawing.Size(89, 23);
             this.btn_down2.TabIndex = 5;
@@ -148,7 +163,7 @@
             // lb_down
             // 
             this.lb_down.AutoSize = true;
-            this.lb_down.Location = new System.Drawing.Point(396, 174);
+            this.lb_down.Location = new System.Drawing.Point(396, 169);
             this.lb_down.Name = "lb_down";
             this.lb_down.Size = new System.Drawing.Size(41, 12);
             this.lb_down.TabIndex = 4;
@@ -156,15 +171,15 @@
             // 
             // pb_down
             // 
-            this.pb_down.Location = new System.Drawing.Point(6, 174);
+            this.pb_down.Location = new System.Drawing.Point(6, 169);
             this.pb_down.Name = "pb_down";
-            this.pb_down.Size = new System.Drawing.Size(384, 12);
+            this.pb_down.Size = new System.Drawing.Size(381, 12);
             this.pb_down.Step = 1;
             this.pb_down.TabIndex = 3;
             // 
             // btn_down
             // 
-            this.btn_down.Location = new System.Drawing.Point(396, 49);
+            this.btn_down.Location = new System.Drawing.Point(394, 49);
             this.btn_down.Name = "btn_down";
             this.btn_down.Size = new System.Drawing.Size(89, 23);
             this.btn_down.TabIndex = 2;
@@ -174,11 +189,11 @@
             // 
             // btn_export
             // 
-            this.btn_export.Location = new System.Drawing.Point(395, 20);
+            this.btn_export.Location = new System.Drawing.Point(393, 20);
             this.btn_export.Name = "btn_export";
             this.btn_export.Size = new System.Drawing.Size(89, 23);
             this.btn_export.TabIndex = 1;
-            this.btn_export.Text = "导出excel";
+            this.btn_export.Text = "导出 Excel";
             this.btn_export.UseVisualStyleBackColor = true;
             this.btn_export.Click += new System.EventHandler(this.btn_export_Click);
             // 
@@ -189,7 +204,7 @@
             this.tbx_rst.Name = "tbx_rst";
             this.tbx_rst.ReadOnly = true;
             this.tbx_rst.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.tbx_rst.Size = new System.Drawing.Size(384, 148);
+            this.tbx_rst.Size = new System.Drawing.Size(381, 143);
             this.tbx_rst.TabIndex = 0;
             this.tbx_rst.WordWrap = false;
             // 
@@ -224,5 +239,6 @@
         private System.Windows.Forms.ProgressBar pb_down;
         private System.Windows.Forms.Label lb_down;
         private System.Windows.Forms.Button btn_down2;
+        private System.Windows.Forms.CheckBox cbx_spiderAll;
     }
 }

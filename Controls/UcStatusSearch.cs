@@ -43,6 +43,7 @@ namespace uspto.Controls
             {
                 btn_search.Text = "查询";
             });
+           
 
             var nums = tbx_nums.Lines.Distinct().Where(m => m.Length > 0 && Regex.IsMatch(m, @"\d+")).ToArray();
             DoSearch(nums);
@@ -59,16 +60,24 @@ namespace uspto.Controls
                 pb_nums.Value = 0;
                 pb_nums.Maximum = nums.Length;
                 btn_search.Text = "取消";
+                
+                var spiderAll = cbx_spiderAll.Checked;
+                if(spiderAll)
+                {
+                    tbx_rst.AppendText("\r\n当前查询全部信息内容较多，请耐心等候\r\n");
+                }
 
-                var client = new RestClient();
-                client.BaseUrl = new Uri("http://tsdr.uspto.gov/");
-                client.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36 Edg/80.0.361.62";
 
-                var htmldoc = new HtmlAgilityPack.HtmlDocument();
-
-                var list = new List<Models.Patent>();
                 Task.Run(async () =>
                 {
+
+                    var client = new RestClient();
+                    client.BaseUrl = new Uri("https://tsdr.uspto.gov/");
+                    client.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36";
+
+                    var htmldoc = new HtmlAgilityPack.HtmlDocument();
+                    var list = new List<Models.Patent>();
+
                     foreach (var item in nums)
                     {
                         if (CancellationTokenSourceSearch.IsCancellationRequested)
@@ -78,7 +87,7 @@ namespace uspto.Controls
                         model.Num = item.Trim();
 
                         var request = new RestRequest();
-                        request.AddHeader("Referer", "http://tsdr.uspto.gov/");
+                        request.AddHeader("Referer", "https://tsdr.uspto.gov/");
                         request.Resource = $"statusview/sn{model.Num}";
                         var resp = client.Get(request);
                         if (!resp.IsSuccessful)
@@ -92,10 +101,10 @@ namespace uspto.Controls
                         {
 
                             htmldoc.LoadHtml(resp.Content);
-                            var name = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Mark:')]/../div[2]");
-                            var status = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status:')]/../div[2]");
-                            var statusdate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status Date:')]/../div[2]");
-                            var pubDate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Publication Date:')]/../div[2]");
+                            var name = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Mark:')]/following-sibling::div[1]");
+                            var status = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status:')]/following-sibling::div[1]");
+                            var statusdate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status Date:')]/following-sibling::div[1]");
+                            var pubDate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Publication Date:')]/following-sibling::div[1]");
 
                             if (name != null)
                             {
@@ -113,128 +122,146 @@ namespace uspto.Controls
                             {
                                 model.PublicationDate = pubDate.InnerText.Trim();
                             }
+
+                            var InternationalClass = htmldoc.DocumentNode.SelectSingleNode("//*[@id='data_container']//div/div[@class='key'][contains(text(),'International Class')]/following-sibling::div[1]");
+                            var filingDate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Filing Date')]/following-sibling::div[1]");
+                            if (InternationalClass != null)
+                            {
+                                model.TEASPlusNewApplication["INTERNATIONAL CLASS"] = Regex.Match(InternationalClass.InnerText, "\\d+").Value;
+                            }
+                            if (filingDate != null)
+                            {
+                                model.TEASPlusNewApplication["Filing Date"] = filingDate.InnerText.Trim();
+                            }
+
+
 #if !DEBUG
                             await Task.Delay(new Random().Next(200, 500));
 #endif
-                            request.Resource = $"documentviewer?caseId=sn{model.Num}&";
-                            var resp2 = client.Get(request);
-
-                            consoleInfo += " document " + resp2.StatusCode;
-                            if (!resp2.IsSuccessful)
+                            //以上为基础信息
+                            //以下为需要二次查询的信息
+                            if (spiderAll)//查询增值信息
                             {
-                                resp2 = client.Get(request);
-                            }
 
-                            if (resp2.IsSuccessful)
-                            {
-                                htmldoc.LoadHtml(resp2.Content);
-                                var nodejson = htmldoc.DocumentNode.SelectSingleNode("/html/head/script[contains(text(),'DocsList')]");
-                                if (nodejson != null)
+                                request.Resource = $"documentviewer?caseId=sn{model.Num}&";
+                                var resp2 = client.Get(request);
+
+                                consoleInfo += " document " + resp2.StatusCode;
+                                if (!resp2.IsSuccessful)
                                 {
-                                    var json = nodejson.InnerText.Replace("var DocsList =", "");
-                                    var docslist = Newtonsoft.Json.JsonConvert.DeserializeObject<DocsList>(json);
-                                    model.DocDates = docslist.caseDocs.Take(5).Select(m => m.displayDate + " " + m.description).ToArray();
-                                    var cert = docslist.caseDocs.Where(m => m.description.Contains("Registration Certificate")).FirstOrDefault();
-                                    if (cert != null && cert.urlPathList.Length > 0)
+                                    resp2 = client.Get(request);
+                                }
+
+                                if (resp2.IsSuccessful)
+                                {
+                                    htmldoc.LoadHtml(resp2.Content);
+                                    var nodejson = htmldoc.DocumentNode.SelectSingleNode("/html/head/script[contains(text(),'DocsList')]");
+                                    if (nodejson != null)
                                     {
-                                        model.PdfFile = cert.urlPathList[0];//注册文件下载地址                                       
-                                    }
-                                    var oafile = docslist.caseDocs.Where(m => m.description.Contains("Offc Action Outgoing")).FirstOrDefault();
-                                    if (oafile != null && oafile.urlPathList.Length > 0)
-                                    {
-                                        model.OffcActionFile = oafile.urlPathList[0];//复生文件html地址
-                                    }
-                                    var newapplication = docslist.caseDocs.Where(m => m.description.Contains("New Application")).FirstOrDefault();
-                                    if (newapplication != null && newapplication.urlPathList.Length > 0)
-                                    {
-                                        var newUrl = newapplication.urlPathList[0];
-                                        if (!string.IsNullOrEmpty(newUrl) && newUrl.StartsWith("http"))
+                                        var json = nodejson.InnerText.Replace("var DocsList =", "");
+                                        var docslist = Newtonsoft.Json.JsonConvert.DeserializeObject<DocsList>(json);
+                                        model.DocDates = docslist.caseDocs.Select(m => m.displayDate + " " + m.description).ToArray();
+                                        var cert = docslist.caseDocs.Where(m => m.description.Contains("Registration Certificate")).FirstOrDefault();
+                                        if (cert != null && cert.urlPathList.Length > 0)
                                         {
-                                            request.Resource = newUrl;
-                                            var resp3 = client.Get(request);
-                                            consoleInfo += " new application " + resp2.StatusCode;
-                                            if (resp3.IsSuccessful)
+                                            model.PdfFile = cert.urlPathList[0];//注册文件下载地址                                       
+                                        }
+                                        var oafile = docslist.caseDocs.Where(m => m.description.Contains("Offc Action Outgoing")).FirstOrDefault();
+                                        if (oafile != null && oafile.urlPathList.Length > 0)
+                                        {
+                                            model.OffcActionFile = oafile.urlPathList[0];//复生文件html地址
+                                        }
+                                        var newapplication = docslist.caseDocs.Where(m => m.description.Contains("New Application")).FirstOrDefault();
+                                        if (newapplication != null && newapplication.urlPathList.Length > 0)
+                                        {
+                                            var newUrl = newapplication.urlPathList[0];
+                                            if (!string.IsNullOrEmpty(newUrl) && newUrl.StartsWith("http"))
                                             {
-                                                htmldoc.LoadHtml(resp3.Content);
-
-                                                try
+                                                request.Resource = newUrl;
+                                                var resp3 = client.Get(request);
+                                                consoleInfo += " new application " + resp2.StatusCode;
+                                                if (resp3.IsSuccessful)
                                                 {
-                                                    var classcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new classcd-goods']");
-                                                    if (classcdNode != null)
-                                                        model.TEASPlusNewApplication["INTERNATIONAL CLASS"] = System.Web.HttpUtility.HtmlDecode(classcdNode.InnerText).Trim();
+                                                    htmldoc.LoadHtml(resp3.Content);
 
-                                                    var descNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new desc-goods']");
-                                                    if (descNode != null)
-                                                        model.TEASPlusNewApplication["IDENTIFICATION"] = descNode.InnerText.Trim();
+                                                    try
+                                                    {
+                                                        var classcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new classcd-goods']");
+                                                        if (classcdNode != null)
+                                                            model.TEASPlusNewApplication["INTERNATIONAL CLASS"] = System.Web.HttpUtility.HtmlDecode(classcdNode.InnerText).Trim();
 
-                                                    var nameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr name-corr']");
-                                                    if (nameNode != null)
-                                                        model.TEASPlusNewApplication["NAME"] = nameNode.InnerText.Trim();
-                                                    var streetNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr street-corr']");
-                                                    if (streetNode != null)
-                                                        model.TEASPlusNewApplication["STREET"] = streetNode.InnerText.Trim();
-                                                    var cityNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr city-corr']");
-                                                    if (cityNode != null)
-                                                        model.TEASPlusNewApplication["CITY"] = cityNode.InnerText.Trim();
-                                                    var stateNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr state-corr']");
-                                                    if (stateNode != null)
-                                                        model.TEASPlusNewApplication["STATE"] = stateNode.InnerText.Trim();
-                                                    var countryNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr country-corr']");
-                                                    if (countryNode != null)
-                                                        model.TEASPlusNewApplication["COUNTRY"] = countryNode.InnerText.Trim();
-                                                    var postalcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr postalcd-corr']");
-                                                    if (postalcdNode != null)
-                                                        model.TEASPlusNewApplication["ZIP"] = postalcdNode.InnerText.Trim();
-                                                    var phoneNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr phone-corr']");
-                                                    if (phoneNode != null)
-                                                        model.TEASPlusNewApplication["PHONE"] = phoneNode.InnerText.Trim();
-                                                    var emailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr emailAddr-corr']");
-                                                    if (emailNode != null)
-                                                        model.TEASPlusNewApplication["EMAIL ADDRESS"] = emailNode.InnerText.Trim();
-                                                    var auemailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr auEmail-corr']");
-                                                    if (auemailNode != null)
-                                                        model.TEASPlusNewApplication["AUTHORIZED TO COMMUNICATE VIA EMAIL"] = auemailNode.InnerText.Trim();
-                                                    var numclassesHeadingNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-heading']");
-                                                    if (numclassesHeadingNode != null)
-                                                        model.TEASPlusNewApplication["APPLICATION FILING OPTION"] = numclassesHeadingNode.InnerText.Trim();
-                                                    var numclassesFeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-fees']");
-                                                    if (numclassesFeesNode != null)
-                                                        model.TEASPlusNewApplication["NUMBER OF CLASSES"] = numclassesFeesNode.InnerText.Trim();
-                                                    var feeNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees fee-per-class-fees']");
-                                                    if (feeNode != null)
-                                                        model.TEASPlusNewApplication["FEE PER CLASS"] = feeNode.InnerText.Trim();
-                                                    var totalfeefeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees totalfee-fees']");
-                                                    if (totalfeefeesNode != null)
-                                                        model.TEASPlusNewApplication["TOTAL FEE PAID"] = totalfeefeesNode.InnerText.Trim();
-                                                    var signamesignNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures signame-sign']");
-                                                    if (signamesignNode != null)
-                                                        model.TEASPlusNewApplication["SIGNATURE"] = signamesignNode.InnerText.Trim();
-                                                    var signatorynameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures signatoryname-sign']");
-                                                    if (signatorynameNode != null)
-                                                        model.TEASPlusNewApplication["SIGNATORY'S NAME"] = signatorynameNode.InnerText.Trim();
-                                                    var signpositionNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures sign-position-sign']");
-                                                    if (signpositionNode != null)
-                                                        model.TEASPlusNewApplication["SIGNATORY'S POSITION"] = signpositionNode.InnerText.Trim();
-                                                    var signdtNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures sign-dt-sign']");
-                                                    if (signdtNode != null)
-                                                        model.TEASPlusNewApplication["DATE SIGNED"] = signdtNode.InnerText.Trim();
+                                                        var descNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new desc-goods']");
+                                                        if (descNode != null)
+                                                            model.TEASPlusNewApplication["IDENTIFICATION"] = descNode.InnerText.Trim();
 
-                                                    var filingDataNode = htmldoc.DocumentNode.SelectSingleNode("//table//tr//td/b[contains(text(),'Filing')]/../b[2]");
-                                                    if (filingDataNode != null)
-                                                        model.TEASPlusNewApplication["Filing Date"] = filingDataNode.InnerText.Trim();
+                                                        var nameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr name-corr']");
+                                                        if (nameNode != null)
+                                                            model.TEASPlusNewApplication["NAME"] = nameNode.InnerText.Trim();
+                                                        var streetNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr street-corr']");
+                                                        if (streetNode != null)
+                                                            model.TEASPlusNewApplication["STREET"] = streetNode.InnerText.Trim();
+                                                        var cityNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr city-corr']");
+                                                        if (cityNode != null)
+                                                            model.TEASPlusNewApplication["CITY"] = cityNode.InnerText.Trim();
+                                                        var stateNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr state-corr']");
+                                                        if (stateNode != null)
+                                                            model.TEASPlusNewApplication["STATE"] = stateNode.InnerText.Trim();
+                                                        var countryNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr country-corr']");
+                                                        if (countryNode != null)
+                                                            model.TEASPlusNewApplication["COUNTRY"] = countryNode.InnerText.Trim();
+                                                        var postalcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr postalcd-corr']");
+                                                        if (postalcdNode != null)
+                                                            model.TEASPlusNewApplication["ZIP"] = postalcdNode.InnerText.Trim();
+                                                        var phoneNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr phone-corr']");
+                                                        if (phoneNode != null)
+                                                            model.TEASPlusNewApplication["PHONE"] = phoneNode.InnerText.Trim();
+                                                        var emailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr emailAddr-corr']");
+                                                        if (emailNode != null)
+                                                            model.TEASPlusNewApplication["EMAIL ADDRESS"] = emailNode.InnerText.Trim();
+                                                        var auemailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr auEmail-corr']");
+                                                        if (auemailNode != null)
+                                                            model.TEASPlusNewApplication["AUTHORIZED TO COMMUNICATE VIA EMAIL"] = auemailNode.InnerText.Trim();
+                                                        var numclassesHeadingNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-heading']");
+                                                        if (numclassesHeadingNode != null)
+                                                            model.TEASPlusNewApplication["APPLICATION FILING OPTION"] = numclassesHeadingNode.InnerText.Trim();
+                                                        var numclassesFeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-fees']");
+                                                        if (numclassesFeesNode != null)
+                                                            model.TEASPlusNewApplication["NUMBER OF CLASSES"] = numclassesFeesNode.InnerText.Trim();
+                                                        var feeNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees fee-per-class-fees']");
+                                                        if (feeNode != null)
+                                                            model.TEASPlusNewApplication["FEE PER CLASS"] = feeNode.InnerText.Trim();
+                                                        var totalfeefeesNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees totalfee-fees']");
+                                                        if (totalfeefeesNode != null)
+                                                            model.TEASPlusNewApplication["TOTAL FEE PAID"] = totalfeefeesNode.InnerText.Trim();
+                                                        var signamesignNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures signame-sign']");
+                                                        if (signamesignNode != null)
+                                                            model.TEASPlusNewApplication["SIGNATURE"] = signamesignNode.InnerText.Trim();
+                                                        var signatorynameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures signatoryname-sign']");
+                                                        if (signatorynameNode != null)
+                                                            model.TEASPlusNewApplication["SIGNATORY'S NAME"] = signatorynameNode.InnerText.Trim();
+                                                        var signpositionNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr//td[@headers='entered signatures sign-position-sign']");
+                                                        if (signpositionNode != null)
+                                                            model.TEASPlusNewApplication["SIGNATORY'S POSITION"] = signpositionNode.InnerText.Trim();
+                                                        var signdtNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered signatures sign-dt-sign']");
+                                                        if (signdtNode != null)
+                                                            model.TEASPlusNewApplication["DATE SIGNED"] = signdtNode.InnerText.Trim();
+
+                                                        var filingDataNode = htmldoc.DocumentNode.SelectSingleNode("//table//tr//td/b[contains(text(),'Filing')]/../b[2]");
+                                                        if (filingDataNode != null)
+                                                            model.TEASPlusNewApplication["Filing Date"] = filingDataNode.InnerText.Trim();
+                                                    }
+                                                    catch (Exception ex)
+                                                    {
+                                                        continue;
+                                                        //throw;
+                                                    }
+
                                                 }
-                                                catch (Exception ex)
-                                                {
-                                                    continue;
-                                                    //throw;
-                                                }
-
                                             }
                                         }
                                     }
                                 }
                             }
-
                         }
                         tbx_rst.Invoke(new MethodInvoker(() =>
                         {
@@ -280,8 +307,7 @@ namespace uspto.Controls
                     using (ExcelPackage excelPackage = new ExcelPackage())
                     {
                         excelPackage.Workbook.Worksheets.Add(DateTime.Now.ToString("yyyyMMdd"));
-
-
+                        //excelPackage.Workbook.Worksheets[1].Column(6).Width = 80.00;
                         for (int i = 0; i < patents.Count; i++)
                         {
                             try
@@ -305,23 +331,19 @@ namespace uspto.Controls
                                             j++;
                                         }
                                     }
-
                                 }
-
-
-
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name ?? "";
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num ?? "";
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 3].Value = item.StatusDate ?? "";
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 4].Value = item.Status ?? "";
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 5].Value = item.PublicationDate ?? "";
-                                var docdata = string.Empty;
+                                var docdata = new StringBuilder();
 
                                 if (item.DocDates != null && item.DocDates.Length > 0)
                                 {
-                                    item.DocDates.ToList().ForEach(m => docdata = docdata + m + "\r\n");
-                                }
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = docdata;// string.Join("\t",item.DocDates);
+                                    item.DocDates.Take(5).ToList().ForEach(m => docdata.Append(m + "\r\n"));
+                                }                                
+                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = docdata.ToString();// string.Join("\t",item.DocDates);
                                 excelPackage.Workbook.Worksheets[1].Cells[i + 2, 7].Value = item.PdfFile ?? "";
 
                                 if (item.TEASPlusNewApplication != null)
@@ -580,6 +602,9 @@ namespace uspto.Controls
             }
         }
 
-
+        private void cbx_spiderAll_CheckedChanged(object sender, EventArgs e)
+        {
+            btn_down.Enabled = btn_down2.Enabled = cbx_spiderAll.Checked;           
+        }
     }
 }
