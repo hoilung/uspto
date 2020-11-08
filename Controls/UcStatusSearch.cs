@@ -35,6 +35,23 @@ namespace uspto.Controls
         {
             if (btn_search.Text == "取消" && CancellationTokenSourceSearch != null)
             {
+                if (selectWait)
+                {
+                    if (MessageBox.Show("继续查询？", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        selectWait = false;
+                        return;
+                    }
+                }
+                else
+                {
+                    if (MessageBox.Show("暂停查询？，", "提示", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        selectWait = true;
+                        return;
+                    }
+                }
+
                 CancellationTokenSourceSearch.Cancel();
                 return;
             }
@@ -42,6 +59,7 @@ namespace uspto.Controls
             CancellationTokenSourceSearch.Token.Register(() =>
             {
                 btn_search.Text = "查询";
+                selectWait = false;
             });
            
 
@@ -50,6 +68,11 @@ namespace uspto.Controls
         }
 
         private List<Models.Patent> patents = new List<Models.Patent>();
+
+        /// <summary>
+        /// 查询是否暂停
+        /// </summary>
+        private bool selectWait = false;
 
         private void DoSearch(string[] nums)
         {
@@ -80,6 +103,15 @@ namespace uspto.Controls
 
                     foreach (var item in nums)
                     {
+                        while (selectWait)
+                        {
+                            await Task.Delay(5000);
+                            tbx_rst.Invoke(new MethodInvoker(() =>
+                            {
+                                tbx_rst.AppendText($"查询信息暂停，等待恢复\r\n");
+                            }));                            
+                            continue;
+                        }
                         if (CancellationTokenSourceSearch.IsCancellationRequested)
                             break;
 
@@ -392,7 +424,9 @@ namespace uspto.Controls
             }
             File.AppendAllLines(filename, datas, Encoding.UTF8);
         }
-
+        /// <summary>
+        /// 是否暂停下载
+        /// </summary>
         private bool downloadWait = false;
         CancellationTokenSource CancellationTokenSourceDown = new CancellationTokenSource();
         private void btn_down_Click(object sender, EventArgs e)
@@ -525,7 +559,7 @@ namespace uspto.Controls
                                 await Task.Delay(5000);
                                 tbx_rst.Invoke(new MethodInvoker(() =>
                                 {
-                                    tbx_rst.AppendText($"下载暂停，等待恢复\r\n");
+                                    tbx_rst.AppendText($"下载文件暂停，等待恢复\r\n");
                                 }));
                                 continue;
                             }
