@@ -50,6 +50,7 @@
             // tbx_nums
             // 
             this.tbx_nums.Location = new System.Drawing.Point(3, 20);
+            this.tbx_nums.MaxLength = 0;
             this.tbx_nums.Multiline = true;
             this.tbx_nums.Name = "tbx_nums";
             this.tbx_nums.ScrollBars = System.Windows.Forms.ScrollBars.Both;
@@ -200,6 +201,7 @@
             // tbx_rst
             // 
             this.tbx_rst.Location = new System.Drawing.Point(6, 20);
+            this.tbx_rst.MaxLength = 0;
             this.tbx_rst.Multiline = true;
             this.tbx_rst.Name = "tbx_rst";
             this.tbx_rst.ReadOnly = true;
