@@ -17,7 +17,16 @@ namespace uspto
         public Form1()
         {
             InitializeComponent();
+            
             this.Text = this.ProductName + " v" + this.ProductVersion;
+                                  
+
+            //获取版本号
+
+
+
+
+
 #if !DEBUG
             if (!ucStatusSearch1.LicenseVerify())
             {
