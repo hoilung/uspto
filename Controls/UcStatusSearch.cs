@@ -8,12 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using RestSharp;
-using OfficeOpenXml;
+
 using System.IO;
 using System.Net;
 using System.Text.RegularExpressions;
 using uspto.Models;
 using System.Threading;
+
+using MiniExcelLibs;
 
 namespace uspto.Controls
 {
@@ -61,7 +63,7 @@ namespace uspto.Controls
                 btn_search.Text = "查询";
                 selectWait = false;
             });
-           
+
 
             var nums = tbx_nums.Lines.Distinct().Where(m => m.Length > 0 && Regex.IsMatch(m, @"\d+")).ToArray();
             DoSearch(nums);
@@ -83,9 +85,9 @@ namespace uspto.Controls
                 pb_nums.Value = 0;
                 pb_nums.Maximum = nums.Length;
                 btn_search.Text = "取消";
-                
+
                 var spiderAll = cbx_spiderAll.Checked;
-                if(spiderAll)
+                if (spiderAll)
                 {
                     tbx_rst.AppendText("\r\n当前查询全部信息内容较多，请耐心等候\r\n");
                 }
@@ -94,10 +96,7 @@ namespace uspto.Controls
                 Task.Run(async () =>
                 {
 
-                    var client = new RestClient();
-                    client.BaseUrl = new Uri("https://tsdr.uspto.gov/");
-                    client.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36";
-
+                    var client = new RestClient("https://tsdr.uspto.gov/");
                     var htmldoc = new HtmlAgilityPack.HtmlDocument();
                     var list = new List<Models.Patent>();
 
@@ -109,7 +108,7 @@ namespace uspto.Controls
                             tbx_rst.Invoke(new MethodInvoker(() =>
                             {
                                 tbx_rst.AppendText($"查询信息暂停，等待恢复\r\n");
-                            }));                            
+                            }));
                             continue;
                         }
                         if (CancellationTokenSourceSearch.IsCancellationRequested)
@@ -119,6 +118,8 @@ namespace uspto.Controls
                         model.Num = item.Trim();
 
                         var request = new RestRequest();
+
+                        request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
                         request.AddHeader("Referer", "https://tsdr.uspto.gov/");
                         request.Resource = $"statusview/sn{model.Num}";
                         var resp = client.Get(request);
@@ -136,7 +137,7 @@ namespace uspto.Controls
                             var name = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Mark:')]/following-sibling::div[1]");
                             var status = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status:')]/following-sibling::div[1]");
                             var statusdate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status Date:')]/following-sibling::div[1]");
-                            var pubDate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Publication Date:')]/following-sibling::div[1]");
+                            var pubDate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary' or @id='sumary-section']//div/div[@class='key'][contains(text(),'Publication Date:')]/following-sibling::div[1]");
 
                             if (name != null)
                             {
@@ -215,42 +216,39 @@ namespace uspto.Controls
                                                 if (resp3.IsSuccessful)
                                                 {
                                                     htmldoc.LoadHtml(resp3.Content);
-
                                                     try
                                                     {
                                                         var classcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new classcd-goods']");
                                                         if (classcdNode != null)
                                                             model.TEASPlusNewApplication["INTERNATIONAL CLASS"] = System.Web.HttpUtility.HtmlDecode(classcdNode.InnerText).Trim();
-
                                                         var descNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new desc-goods']");
                                                         if (descNode != null)
                                                             model.TEASPlusNewApplication["IDENTIFICATION"] = descNode.InnerText.Trim();
-
                                                         var nameNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr name-corr']");
                                                         if (nameNode != null)
                                                             model.TEASPlusNewApplication["NAME"] = nameNode.InnerText.Trim();
-                                                        var streetNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr street-corr']");
+                                                        var streetNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr street-corr' or @headers='entered att street-att']");
                                                         if (streetNode != null)
                                                             model.TEASPlusNewApplication["STREET"] = streetNode.InnerText.Trim();
-                                                        var cityNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr city-corr']");
+                                                        var cityNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr city-corr' or @headers='entered att city-att']");
                                                         if (cityNode != null)
                                                             model.TEASPlusNewApplication["CITY"] = cityNode.InnerText.Trim();
-                                                        var stateNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr state-corr']");
+                                                        var stateNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr state-corr' or @headers='entered att state-att']");
                                                         if (stateNode != null)
                                                             model.TEASPlusNewApplication["STATE"] = stateNode.InnerText.Trim();
-                                                        var countryNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr country-corr']");
+                                                        var countryNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr country-corr' or @headers='entered att country-att']");
                                                         if (countryNode != null)
                                                             model.TEASPlusNewApplication["COUNTRY"] = countryNode.InnerText.Trim();
-                                                        var postalcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr postalcd-corr']");
+                                                        var postalcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr postalcd-corr' or @headers='entered att postalcd-att']");
                                                         if (postalcdNode != null)
                                                             model.TEASPlusNewApplication["ZIP"] = postalcdNode.InnerText.Trim();
-                                                        var phoneNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr phone-corr']");
+                                                        var phoneNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr phone-corr' or @headers='entered att zipcd-att']");
                                                         if (phoneNode != null)
                                                             model.TEASPlusNewApplication["PHONE"] = phoneNode.InnerText.Trim();
-                                                        var emailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr emailAddr-corr']");
+                                                        var emailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr emailAddr-corr' or @headers='entered att emailAddr-att']");
                                                         if (emailNode != null)
                                                             model.TEASPlusNewApplication["EMAIL ADDRESS"] = emailNode.InnerText.Trim();
-                                                        var auemailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr auEmail-corr']");
+                                                        var auemailNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered corr auEmail-corr' or @headers='entered att auEmail-att']");
                                                         if (auemailNode != null)
                                                             model.TEASPlusNewApplication["AUTHORIZED TO COMMUNICATE VIA EMAIL"] = auemailNode.InnerText.Trim();
                                                         var numclassesHeadingNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered fees numclasses-heading']");
@@ -336,71 +334,56 @@ namespace uspto.Controls
                 saveDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
-                    using (ExcelPackage excelPackage = new ExcelPackage())
+
+                    var table = new DataTable();
                     {
-                        excelPackage.Workbook.Worksheets.Add(DateTime.Now.ToString("yyyyMMdd"));
-                        //excelPackage.Workbook.Worksheets[1].Column(6).Width = 80.00;
+                        table.Columns.Add("商标名称", typeof(string));
+                        table.Columns.Add("申请号", typeof(string));
+                        table.Columns.Add("状态时间", typeof(string));
+                        table.Columns.Add("申请状态", typeof(string));
+                        table.Columns.Add("发布时间", typeof(string));
+                        table.Columns.Add("文档时间", typeof(string));
+                        table.Columns.Add("PDF文件", typeof(string));
+
+
+                        foreach (var info in patents.FirstOrDefault().TEASPlusNewApplication)
+                        {
+                            table.Columns.Add(info.Key, typeof(string));
+
+                        }
+
+
                         for (int i = 0; i < patents.Count; i++)
                         {
                             try
                             {
                                 var item = patents[i];
-                                if (i == 0)
-                                {
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 1].Value = "商标名称";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 2].Value = "申请号";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 3].Value = "状态时间";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 4].Value = "申请状态";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 5].Value = "发布时间";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 6].Value = "文档时间";
-                                    excelPackage.Workbook.Worksheets[1].Cells[1, 7].Value = "PDF文件";
-                                    if (item.TEASPlusNewApplication != null)
-                                    {
-                                        int j = 8;
-                                        foreach (var info in item.TEASPlusNewApplication)
-                                        {
-                                            excelPackage.Workbook.Worksheets[1].Cells[1, j].Value = info.Key;
-                                            j++;
-                                        }
-                                    }
-                                }
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 1].Value = item.Name ?? "";
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 2].Value = item.Num ?? "";
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 3].Value = item.StatusDate ?? "";
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 4].Value = item.Status ?? "";
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 5].Value = item.PublicationDate ?? "";
-                                var docdata = new StringBuilder();
 
-                                if (item.DocDates != null && item.DocDates.Length > 0)
-                                {
-                                    item.DocDates.Take(5).ToList().ForEach(m => docdata.Append(m + "\r\n"));
-                                }                                
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 6].Value = docdata.ToString();// string.Join("\t",item.DocDates);
-                                excelPackage.Workbook.Worksheets[1].Cells[i + 2, 7].Value = item.PdfFile ?? "";
+                                //var docdata = new StringBuilder();
+                                //if (item.DocDates != null && item.DocDates.Length > 0)
+                                //{                                    
+                                //    //item.DocDates.Take(5).ToList().ForEach(m => docdata.Append(m + "\r\n"));
+                                //}
+                                table.Rows.Add(item.Name, item.Num, item.StatusDate, item.Status, item.PublicationDate, (item.DocDates != null ? string.Join("\r\n", item.DocDates.Take(5)) : ""), item.PdfFile);
 
-                                if (item.TEASPlusNewApplication != null)
+                                int j = 7;
+                                foreach (var info in item.TEASPlusNewApplication)
                                 {
-                                    int j = 8;
-                                    foreach (var info in item.TEASPlusNewApplication)
-                                    {
-                                        excelPackage.Workbook.Worksheets[1].Cells[i + 2, j].Value = info.Value;
-                                        j++;
-                                    }
+                                    table.Rows[i][j] = info.Value;
+                                    j++;
                                 }
+
 
                             }
                             catch (Exception ex)
                             {
-                                MessageBox.Show(ex.Message, "错误");
-                                break;
+                                MessageBox.Show(ex.Message);
+                                throw;
                             }
-
                         }
-
-                        excelPackage.SaveAs(new FileInfo(saveDialog.FileName));
-
+                        MiniExcel.SaveAs(saveDialog.FileName, table, sheetName: DateTime.Now.ToString("yyyyMMdd"));
                     }
-                    MessageBox.Show("导出成功", "提示");
+                    MessageBox.Show("导出成功\r\n" + saveDialog.FileName, "提示");
                 }
             }
             else
@@ -638,7 +621,7 @@ namespace uspto.Controls
 
         private void cbx_spiderAll_CheckedChanged(object sender, EventArgs e)
         {
-            btn_down.Enabled = btn_down2.Enabled = cbx_spiderAll.Checked;           
+            btn_down.Enabled = btn_down2.Enabled = cbx_spiderAll.Checked;
         }
     }
 }

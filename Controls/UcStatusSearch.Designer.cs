@@ -108,8 +108,6 @@
             // cbx_spiderAll
             // 
             this.cbx_spiderAll.AutoSize = true;
-            this.cbx_spiderAll.Checked = true;
-            this.cbx_spiderAll.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbx_spiderAll.Location = new System.Drawing.Point(395, 22);
             this.cbx_spiderAll.Name = "cbx_spiderAll";
             this.cbx_spiderAll.Size = new System.Drawing.Size(96, 16);
