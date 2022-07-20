@@ -1,21 +1,17 @@
-﻿using System;
+﻿using MiniExcelLibs;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using RestSharp;
-
-using System.IO;
-using System.Net;
-using System.Text.RegularExpressions;
 using uspto.Models;
-using System.Threading;
-
-using MiniExcelLibs;
 
 namespace uspto.Controls
 {
@@ -75,7 +71,7 @@ namespace uspto.Controls
         /// 查询是否暂停
         /// </summary>
         private bool selectWait = false;
-
+        static readonly HttpClient http = new HttpClient();
         private void DoSearch(string[] nums)
         {
             if (nums != null && nums.Length > 0)
@@ -92,11 +88,15 @@ namespace uspto.Controls
                     tbx_rst.AppendText("\r\n当前查询全部信息内容较多，请耐心等候\r\n");
                 }
 
-
                 Task.Run(async () =>
                 {
+                    // var http = new HttpClient();
 
-                    var client = new RestClient("https://tsdr.uspto.gov/");
+                    http.DefaultRequestHeaders.UserAgent.Clear();
+                    http.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36");
+                    http.DefaultRequestHeaders.Referrer = new Uri("https://tsdr.uspto.gov/");
+                    http.BaseAddress = new Uri("https://tsdr.uspto.gov/");
+
                     var htmldoc = new HtmlAgilityPack.HtmlDocument();
                     var list = new List<Models.Patent>();
 
@@ -117,23 +117,30 @@ namespace uspto.Controls
                         var model = new Models.Patent();
                         model.Num = item.Trim();
 
-                        var request = new RestRequest();
 
-                        request.AddHeader("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36");
-                        request.AddHeader("Referer", "https://tsdr.uspto.gov/");
-                        request.Resource = $"statusview/sn{model.Num}";
-                        var resp = client.Get(request);
-                        if (!resp.IsSuccessful)
+                        var url = $"statusview/sn{model.Num}";
+
+                        var resp = await http.GetAsync(url);
+
+                        int count = 0;
+                        while (!resp.IsSuccessStatusCode && count < 5)
                         {
-                            resp = client.Get(request);
+                            count += 1;
+                            tbx_rst.Invoke(new MethodInvoker(() =>
+                            {
+                                tbx_rst.AppendText($"{model.Num} {resp.StatusCode} Retry {count} \r\n");
+                            }));
+                            await Task.Delay(500);
+                            resp = await http.GetAsync(url);
+
                         }
 
                         var consoleInfo = $"{item} status {resp.StatusCode}";
 
-                        if (resp.IsSuccessful)
+                        if (resp.IsSuccessStatusCode)
                         {
 
-                            htmldoc.LoadHtml(resp.Content);
+                            htmldoc.LoadHtml(resp.Content.ReadAsStringAsync().Result);
                             var name = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Mark:')]/following-sibling::div[1]");
                             var status = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status:')]/following-sibling::div[1]");
                             var statusdate = htmldoc.DocumentNode.SelectSingleNode("//*[@id='summary']//div/div[@class='key'][contains(text(),'Status Date:')]/following-sibling::div[1]");
@@ -169,25 +176,25 @@ namespace uspto.Controls
 
 
 #if !DEBUG
-                            await Task.Delay(new Random().Next(200, 500));
+                            await Task.Delay(new Random().Next(300, 500));
 #endif
                             //以上为基础信息
                             //以下为需要二次查询的信息
                             if (spiderAll)//查询增值信息
                             {
 
-                                request.Resource = $"documentviewer?caseId=sn{model.Num}&";
-                                var resp2 = client.Get(request);
+                                var url2 = $"documentviewer?caseId=sn{model.Num}&";
+                                var resp2 = await http.GetAsync(url2);
 
                                 consoleInfo += " document " + resp2.StatusCode;
-                                if (!resp2.IsSuccessful)
+                                if (!resp2.IsSuccessStatusCode)
                                 {
-                                    resp2 = client.Get(request);
+                                    resp2 = await http.GetAsync(url2);
                                 }
 
-                                if (resp2.IsSuccessful)
+                                if (resp2.IsSuccessStatusCode)
                                 {
-                                    htmldoc.LoadHtml(resp2.Content);
+                                    htmldoc.LoadHtml(resp2.Content.ReadAsStringAsync().Result);
                                     var nodejson = htmldoc.DocumentNode.SelectSingleNode("/html/head/script[contains(text(),'DocsList')]");
                                     if (nodejson != null)
                                     {
@@ -209,13 +216,12 @@ namespace uspto.Controls
                                         {
                                             var newUrl = newapplication.urlPathList[0];
                                             if (!string.IsNullOrEmpty(newUrl) && newUrl.StartsWith("http"))
-                                            {
-                                                request.Resource = newUrl;
-                                                var resp3 = client.Get(request);
+                                            {                                               
+                                                var resp3 = await http.GetAsync(newUrl);
                                                 consoleInfo += " new application " + resp2.StatusCode;
-                                                if (resp3.IsSuccessful)
+                                                if (resp3.IsSuccessStatusCode)
                                                 {
-                                                    htmldoc.LoadHtml(resp3.Content);
+                                                    htmldoc.LoadHtml(resp3.Content.ReadAsStringAsync().Result);
                                                     try
                                                     {
                                                         var classcdNode = htmldoc.DocumentNode.SelectSingleNode("/html//table/tr/td[@headers='entered goods-new classcd-goods']");
@@ -301,7 +307,7 @@ namespace uspto.Controls
                         }));
                         list.Add(model);
 #if !DEBUG
-                        await Task.Delay(new Random().Next(1000, 2000));
+                        await Task.Delay(new Random().Next(300, 500));
 #endif
                     }
 
